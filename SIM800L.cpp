@@ -8,10 +8,12 @@
 #include "SIM800L.h"
 
 /**
- * Init core variables
+ * Constructor; Init the driver, communication with the module and shared
+ * buffer used by the driver (to avoid multiples allocation)
  */
 SIM800L::SIM800L(int _pinTx, int _pinRx, int _pinRst, unsigned int _recvBufferSize, bool _enableDebug) {
   if(enableDebug) Serial.println("SIM800L : Active SoftwareSerial");
+  
   // Setup the Software serial
   serial = new SoftwareSerial(_pinTx,_pinRx);
   serial->begin(9600);
@@ -29,16 +31,23 @@ SIM800L::SIM800L(int _pinTx, int _pinRx, int _pinRst, unsigned int _recvBufferSi
   recvBuffer = malloc(recvBufferSize);
 }
 
+/**
+ * Destructor; cleanup the memory allocated by the driver
+ */
 SIM800L::~SIM800L() {
   free(internalBuffer);
   free(recvBuffer);
 }
 
+/**
+ * Do HTTP/S POST to a specific URL
+ */
 int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int clientWriteTimeoutMs, unsigned int serverReadTimeoutMs) {
   // Cleanup the receive buffer
   for(int i = 0; i < recvBufferSize; i++) {
     recvBuffer[i] = 0;
   }
+  dataSize = 0;
 
   // Initiate HTTP/S session with the module
   int initRC = initiateHTTP(url);
@@ -168,11 +177,15 @@ int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int cl
   return httpRC;
 }
 
+/**
+ * Do HTTP/S GET on a specific URL
+ */
 int SIM800L::doGet(char* url, unsigned int serverReadTimeoutMs) {
   // Cleanup the receive buffer
   for(int i = 0; i < recvBufferSize; i++) {
     recvBuffer[i] = 0;
   }
+  dataSize = 0;
   
   // Initiate HTTP/S session
   int initRC = initiateHTTP(url);
@@ -274,6 +287,9 @@ int SIM800L::doGet(char* url, unsigned int serverReadTimeoutMs) {
   return httpRC;
 }
 
+/**
+ * Meta method to initiate the HTTP/S session on the module
+ */
 int SIM800L::initiateHTTP(char* url) {
   // Init HTTP connection
   sendCommand("AT+HTTPINIT");
@@ -314,6 +330,9 @@ int SIM800L::initiateHTTP(char* url) {
   return 0;
 }
 
+/**
+ * Meta method to terminate the HTTP/S session on the module
+ */
 int SIM800L::terminateHTTP() {
   // Close HTTP connection
   sendCommand("AT+HTTPTERM");
@@ -346,10 +365,16 @@ void SIM800L::reset() {
   
 }
 
+/**
+ * Return the size of data received after the last successful HTTP connection
+ */
 unsigned int SIM800L::getDataSizeReceived() {
   return dataSize;
 }
 
+/**
+ * Return the buffer of data received after the last successful HTTP connection
+ */
 char* SIM800L::getDataReceived() {
   return recvBuffer;
 }
@@ -391,7 +416,6 @@ PowerMode SIM800L::getPowerMode() {
 
 /**
  * Status function: Check if the module is registered on the network
- * (home network or roaming network)
  */
 NetworkRegistration SIM800L::getRegistrationStatus() {
   sendCommand("AT+CREG?");
@@ -436,12 +460,18 @@ bool SIM800L::setupGPRS(char* apn) {
   return readResponseCheckAnswer(20000, "OK");
 }
 
+/**
+ * Open the GPRS connectivity
+ */
 bool SIM800L::connectGPRS() {
   sendCommand("AT+SAPBR=1,1");
   // Timout is max 85 seconds according to SIM800 specifications
   return readResponseCheckAnswer(85000, "OK");
 }
 
+/**
+ * Close the GPRS connectivity
+ */
 bool SIM800L::disconnectGPRS() {
   sendCommand("AT+SAPBR=0,1");
   // Timout is max 65 seconds according to SIM800 specifications
@@ -610,6 +640,9 @@ void SIM800L::sendCommand(char* command, char* parameter) {
   serial->flush();
 }
 
+/**
+ * Read from module and forget the data
+ */
 void SIM800L::readToForget(unsigned int timeout) {
   int currentSizeResponse = 0;
 
@@ -661,7 +694,7 @@ bool SIM800L::readResponseCheckAnswer(unsigned int timeout, char* expectedAnswer
 }
 
 /**
- * Read from the module
+ * Read from the module for a specific number of CRLF
  * True if we have some data
  */
 bool SIM800L::readResponse(unsigned int timeout, unsigned int crlfToWait) {

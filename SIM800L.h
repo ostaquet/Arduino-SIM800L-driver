@@ -39,11 +39,11 @@ class SIM800L {
     bool connectGPRS();
     bool disconnectGPRS();
 
-    // Do HTTP methods
+    // HTTP methods
     int doGet(char* url, unsigned int serverReadTimeoutMs);
     int doPost(char* url, char* contentType, char* payload, unsigned int clientWriteTimeoutMs, unsigned int serverReadTimeoutMs);
 
-    // Obtain results from HTTP connections
+    // Obtain results after HTTP successful connections (size and buffer)
     unsigned int getDataSizeReceived();
     char* getDataReceived();
 
@@ -62,7 +62,7 @@ class SIM800L {
     // Find string in another string
     int strIndex(char* str, char* findStr, int startIdx = 0);
 
-    // Manage internal buffers
+    // Manage internal buffer
     void initInternalBuffer();
 
     // Initiate HTTP/S connection
@@ -80,6 +80,8 @@ class SIM800L {
     // Internal memory for the shared buffer
     // Used for all reception of message from the module
     char *internalBuffer;
+
+    // Reception buffer
     char *recvBuffer;
     unsigned int recvBufferSize = 0;
     unsigned int dataSize = 0;
