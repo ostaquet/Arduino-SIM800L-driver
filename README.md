@@ -1,2 +1,2 @@
-# Arduino-SIM800-driver
-Arduino driver for GSM/GPRS module SIMCom SIM800
+# Arduino-SIM800L-driver
+Arduino driver for GSM/GPRS module SIMCom SIM800L
