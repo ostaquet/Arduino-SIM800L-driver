@@ -9,6 +9,15 @@ This is a comprehensive Arduino library to make HTTP or HTTPS communication thro
  * The original module is working with an input voltage of 3.7V to 4.2V. So, __don't connect the naked module directly on the Arduino__. I personnaly use a module with voltage convertor from/to 5V like [this one](https://www.amazon.fr/dp/B073TF2QKL).
  * As the chipset can draw 2A maximum, it is better to use an external power source. __Using the USB power through the computer is not enough while HTTP communication__.
 
+## How to install the library?
+ 1. Click on *Clone or download* on GitHub
+ 2. Choose *Download ZIP*
+ 3. Open Arduino IDE
+ 4. In the menu *Sketch* -> *Include Library* -> *Add .ZIP Library*
+ 5. Select the downloaded file or folder (if automatically uncompress)
+ 6. Restart Arduino IDE
+ 7. Enjoy!
+
 ## Examples
 You will find [examples in the repository](https://github.com/ostaquet/Arduino-SIM800L-driver/tree/master/examples) to make HTTPS GET and HTTPS POST.
 
