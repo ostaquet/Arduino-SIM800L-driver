@@ -90,7 +90,7 @@ If the method returns 200 (HTTP status code for OK), you can obtain the size of 
 ```
 sim800l->getDataSizeReceived();
 ```
-And you can obtain the data recieved through a char array.
+And you can obtain the data recieved through a char array. 
 ```
 sim800l->getDataReceived();
 ```
