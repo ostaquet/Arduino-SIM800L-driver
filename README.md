@@ -23,7 +23,7 @@ You will find [examples in the repository](https://github.com/ostaquet/Arduino-S
 
 We are using the [Postman Echo service](https://docs.postman-echo.com) to illustrate the communication with an external API. By the way, if you need a pretty cool tool to test and validate API, I recommend [Postman](https://www.getpostman.com). They make really API devlopment simple.
 
-## How to quick start?
+## Usage
 
 ### Initiate the driver and the module
 First, you have to initiate the driver by telling him where are the TX pin, the RX pin and the RESET pin. The last two parameters defined the size of the buffer and if the debug mode is enabled.
@@ -99,9 +99,6 @@ At the end of the connection, don't forget to disconnect the GPRS to save power.
 ```
 sim800l->disconnectGPRS();
 ```
-
-## Documentation
-TODO...
 
 ## Links
  * [SIM800 series AT Command Manual](datasheet/SIM800%20Series_AT%20Command%20Manual_V1.09.pdf)
