@@ -28,10 +28,10 @@ void loop() {
 
   // Check if connected, if not reset the module and setup the config again
   if(connected) {
-    Serial.println("GPRS connected !");
+    Serial.println(F("GPRS connected !"));
   } else {
-    Serial.println("GPRS not connected !");
-    Serial.println("Reset the module.");
+    Serial.println(F("GPRS not connected !"));
+    Serial.println(F("Reset the module."));
     sim800l->reset();
     setupModule();
     return;
@@ -41,14 +41,14 @@ void loop() {
   int rc = sim800l->doPost("https://postman-echo.com/post", "application/json", "{\"name\": \"morpheus\", \"job\": \"leader\"}", 10000, 10000);
    if(rc == 200) {
     // Success, output the data received on the serial
-    Serial.print("HTTP POST successful (");
+    Serial.print(F("HTTP POST successful ("));
     Serial.print(sim800l->getDataSizeReceived());
-    Serial.println(" bytes)");
-    Serial.print("Received : ");
+    Serial.println(F(" bytes)"));
+    Serial.print(F("Received : "));
     Serial.println(sim800l->getDataReceived());
   } else {
     // Failed...
-    Serial.print("HTTP POST error ");
+    Serial.print(F("HTTP POST error "));
     Serial.println(rc);
   }
 
@@ -60,17 +60,17 @@ void loop() {
   }
   
   if(disconnected) {
-    Serial.println("GPRS disconnected !");
+    Serial.println(F("GPRS disconnected !"));
   } else {
-    Serial.println("GPRS still connected !");
+    Serial.println(F("GPRS still connected !"));
   }
 
   // Go into low power mode
   bool lowPowerMode = sim800l->setPowerMode(MINIMUM);
   if(lowPowerMode) {
-    Serial.println("Module in low power mode");
+    Serial.println(F("Module in low power mode"));
   } else {
-    Serial.println("Failed to switch module to low power mode");
+    Serial.println(F("Failed to switch module to low power mode"));
   }
 
   // End of program... wait...
@@ -80,10 +80,10 @@ void loop() {
 void setupModule() {
     // Wait until the module is ready to accept AT commands
   while(!sim800l->isReady()) {
-    Serial.println("Problem to initialize AT command, retry in 1 sec");
+    Serial.println(F("Problem to initialize AT command, retry in 1 sec"));
     delay(1000);
   }
-  Serial.println("Setup Complete!");
+  Serial.println(F("Setup Complete!"));
 
   // Wait for the GSM signal
   int signal = sim800l->getSignal();
@@ -91,9 +91,9 @@ void setupModule() {
     delay(1000);
     signal = sim800l->getSignal();
   }
-  Serial.print("Signal OK (strenght: ");
+  Serial.print(F("Signal OK (strenght: "));
   Serial.print(signal);
-  Serial.println(")");
+  Serial.println(F(")"));
   delay(1000);
 
   // Wait for operator network registration (national or roaming network)
@@ -102,7 +102,7 @@ void setupModule() {
     delay(1000);
     network = sim800l->getRegistrationStatus();
   }
-  Serial.println("Network registration OK");
+  Serial.println(F("Network registration OK"));
   delay(1000);
 
   // Setup APN for GPRS configuration
@@ -111,5 +111,5 @@ void setupModule() {
     success = sim800l->setupGPRS("Internet.be");
     delay(5000);
   }
-  Serial.println("GPRS config OK");
+  Serial.println(F("GPRS config OK"));
 }
