@@ -1,18 +1,18 @@
 #include "SIM800L.h"
  
-#define SIM800_TX_PIN 10
-#define SIM800_RX_PIN 9
-#define SIM800_RST_PIN 8
+#define SIM800_TX_PIN 8
+#define SIM800_RX_PIN 7
+#define SIM800_RST_PIN 6
 
 SIM800L* sim800l;
 
 void setup() {
   // Initialize Serial Monitor for debugging
-  Serial.begin(9600);
+  Serial.begin(115200);
   while(!Serial);
    
   // Initialize SIM800L driver with a reception buffer of 512 bytes, debug disabled
-  sim800l = new SIM800L(SIM800_TX_PIN,SIM800_RX_PIN, SIM800_RST_PIN, 512, false);
+  sim800l = new SIM800L(SIM800_TX_PIN,SIM800_RX_PIN, SIM800_RST_PIN, 300, true);
 
   // Setup module for GPRS communication
   setupModule();
