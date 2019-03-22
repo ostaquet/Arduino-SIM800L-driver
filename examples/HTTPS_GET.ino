@@ -1,18 +1,18 @@
 #include "SIM800L.h"
 
-#define SIM800_TX_PIN 10
-#define SIM800_RX_PIN 9
-#define SIM800_RST_PIN 8
+#define SIM800_TX_PIN 8
+#define SIM800_RX_PIN 7
+#define SIM800_RST_PIN 6
 
 SIM800L* sim800l;
 
 void setup() {
   // Initialize Serial Monitor for debugging
-  Serial.begin(9600);
+  Serial.begin(115200);
   while(!Serial);
    
-  // Initialize SIM800L driver with a reception buffer of 512 bytes, debug disabled
-  sim800l = new SIM800L(SIM800_TX_PIN,SIM800_RX_PIN, SIM800_RST_PIN, 512, false);
+  // Initialize SIM800L driver with an internal buffer of 200 bytes and a reception buffer of 512 bytes, debug disabled
+  sim800l = new SIM800L(SIM800_TX_PIN,SIM800_RX_PIN, SIM800_RST_PIN, 200, 512, false);
 
   // Setup module for GPRS communication
   setupModule();
@@ -38,7 +38,7 @@ void loop() {
   }
 
   // Do HTTP GET communication with 10s for the timeout (read)
-  int rc = sim800l->doGet("https://postman-echo.com/get?foo1=bar1&foo2=bar2", 10000);
+  int rc = sim800l->doGet("https://postman-echo.com/get?foo1=bar1&foo2=bar2", 20000);
    if(rc == 200) {
     // Success, output the data received on the serial
     Serial.print(F("HTTP GET successful ("));
@@ -112,22 +112,4 @@ void setupModule() {
     delay(5000);
   }
   Serial.println(F("GPRS config OK"));
-}
-
-#ifdef __arm__
-// should use uinstd.h to define sbrk but Due causes a conflict
-extern "C" char* sbrk(int incr);
-#else  // __ARM__
-extern char *__brkval;
-#endif  // __arm__
-
-int freeMemory() {
-  char top;
-#ifdef __arm__
-  return &top - reinterpret_cast<char*>(sbrk(0));
-#elif defined(CORE_TEENSY) || (ARDUINO > 103 && ARDUINO != 151)
-  return &top - __brkval;
-#else  // __arm__
-  return __brkval ? &top - __brkval : &top - __malloc_heap_start;
-#endif  // __arm__
 }

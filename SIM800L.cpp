@@ -11,7 +11,7 @@
  * Constructor; Init the driver, communication with the module and shared
  * buffer used by the driver (to avoid multiples allocation)
  */
-SIM800L::SIM800L(int _pinTx, int _pinRx, int _pinRst, unsigned int _recvBufferSize, bool _enableDebug) {
+SIM800L::SIM800L(int _pinTx, int _pinRx, int _pinRst, unsigned int _internalBufferSize, unsigned int _recvBufferSize, bool _enableDebug) {
   if(enableDebug) Serial.println(F("SIM800L : Active SoftwareSerial"));
   
   // Setup the Software serial
@@ -26,7 +26,19 @@ SIM800L::SIM800L(int _pinTx, int _pinRx, int _pinRst, unsigned int _recvBufferSi
   reset();
 
   // Prepare internal buffers
-  internalBuffer = malloc(SIM800L_INTERNAL_BUFFER_SIZE);
+  if(enableDebug) {
+    Serial.print(F("SIM800L : Prepare internal buffer of "));
+    Serial.print(_internalBufferSize);
+    Serial.println(F(" bytes"));
+  }
+  internalBufferSize = _internalBufferSize;
+  internalBuffer = malloc(internalBufferSize);
+  
+  if(enableDebug) {
+    Serial.print(F("SIM800L : Prepare reception buffer of "));
+    Serial.print(_recvBufferSize);
+    Serial.println(F(" bytes"));
+  }
   recvBufferSize = _recvBufferSize;
   recvBuffer = malloc(recvBufferSize);
 }
@@ -590,7 +602,7 @@ int SIM800L::strIndex(char* str, char* findStr, int startIdx) {
  * Init internal buffer
  */
 void SIM800L::initInternalBuffer() {
-  for(int i = 0; i < SIM800L_INTERNAL_BUFFER_SIZE; i++) {
+  for(int i = 0; i < internalBufferSize; i++) {
     internalBuffer[i] = '\0';
   }
 }
@@ -659,7 +671,7 @@ void SIM800L::readToForget(unsigned int timeout) {
       currentSizeResponse++;
 
       // Avoid buffer overflow
-      if(currentSizeResponse == SIM800L_INTERNAL_BUFFER_SIZE) {
+      if(currentSizeResponse == internalBufferSize) {
         if(enableDebug) Serial.println(F("SIM800L : Received to forget maximum buffer size"));
         break;
       }
@@ -730,7 +742,7 @@ bool SIM800L::readResponse(unsigned int timeout, unsigned int crlfToWait) {
       currentSizeResponse++;
 
       // Avoid buffer overflow
-      if(currentSizeResponse == SIM800L_INTERNAL_BUFFER_SIZE) {
+      if(currentSizeResponse == internalBufferSize) {
         if(enableDebug) Serial.println(F("SIM800L : Received maximum buffer size"));
         break;
       }

@@ -11,7 +11,7 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
-#define SIM800L_INTERNAL_BUFFER_SIZE 200
+#define DEFAULT_TIMEOUT 5000
 
 enum PowerMode {MINIMUM, NORMAL, POW_UNKNOWN, SLEEP, POW_ERROR};
 enum NetworkRegistration {NOT_REGISTERED, REGISTERED_HOME, SEARCHING, DENIED, NET_UNKNOWN, REGISTERED_ROAMING, NET_ERROR};
@@ -19,7 +19,7 @@ enum NetworkRegistration {NOT_REGISTERED, REGISTERED_HOME, SEARCHING, DENIED, NE
 class SIM800L {
   public:
     // Initialize the driver
-    SIM800L(int _pinTx, int _pinRx, int _pinRst, unsigned int _recvBufferSize = 256, bool _enableDebug = false);
+    SIM800L(int _pinTx, int _pinRx, int _pinRst, unsigned int _internalBufferSize = 128, unsigned int _recvBufferSize = 256, bool _enableDebug = false);
     ~SIM800L();
 
     // Force a reset of the module
@@ -72,7 +72,6 @@ class SIM800L {
   private:
     // Serial line with SIM800L
     SoftwareSerial* serial;
-    unsigned int DEFAULT_TIMEOUT = 5000;
 
     // Details about the circuit: pins
     int pinReset = -1;
@@ -80,6 +79,7 @@ class SIM800L {
     // Internal memory for the shared buffer
     // Used for all reception of message from the module
     char *internalBuffer;
+    unsigned int internalBufferSize = 0;
 
     // Reception buffer
     char *recvBuffer;

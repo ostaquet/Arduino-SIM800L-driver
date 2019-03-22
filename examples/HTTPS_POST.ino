@@ -11,8 +11,8 @@ void setup() {
   Serial.begin(115200);
   while(!Serial);
    
-  // Initialize SIM800L driver with a reception buffer of 512 bytes, debug disabled
-  sim800l = new SIM800L(SIM800_TX_PIN,SIM800_RX_PIN, SIM800_RST_PIN, 300, true);
+  // Initialize SIM800L driver with an internal buffer of 200 bytes and a reception buffer of 512 bytes, debug disabled
+  sim800l = new SIM800L(SIM800_TX_PIN,SIM800_RX_PIN, SIM800_RST_PIN, 200, 512, false);
 
   // Setup module for GPRS communication
   setupModule();
