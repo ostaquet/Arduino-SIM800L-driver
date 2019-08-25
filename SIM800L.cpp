@@ -32,7 +32,7 @@ SIM800L::SIM800L(int _pinTx, int _pinRx, int _pinRst, unsigned int _internalBuff
     Serial.println(F(" bytes"));
   }
   internalBufferSize = _internalBufferSize;
-  internalBuffer = malloc(internalBufferSize);
+  internalBuffer = (char*) malloc(internalBufferSize);
   
   if(enableDebug) {
     Serial.print(F("SIM800L : Prepare reception buffer of "));
@@ -40,7 +40,7 @@ SIM800L::SIM800L(int _pinTx, int _pinRx, int _pinRst, unsigned int _internalBuff
     Serial.println(F(" bytes"));
   }
   recvBufferSize = _recvBufferSize;
-  recvBuffer = malloc(recvBufferSize);
+  recvBuffer = (char *) malloc(recvBufferSize);
 }
 
 /**
@@ -54,7 +54,7 @@ SIM800L::~SIM800L() {
 /**
  * Do HTTP/S POST to a specific URL
  */
-int SIM800L::doPost(const char* url, const char* contentType, char* payload, unsigned int clientWriteTimeoutMs, unsigned int serverReadTimeoutMs) {
+int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int clientWriteTimeoutMs, unsigned int serverReadTimeoutMs) {
   // Cleanup the receive buffer
   for(int i = 0; i < recvBufferSize; i++) {
     recvBuffer[i] = 0;
@@ -75,7 +75,7 @@ int SIM800L::doPost(const char* url, const char* contentType, char* payload, uns
   }
 
   // Prepare to send the payload
-  char* tmpBuf = malloc(30);
+  char* tmpBuf = (char*)malloc(30);
   sprintf(tmpBuf, "AT+HTTPDATA=%d,%d", strlen(payload), clientWriteTimeoutMs);
   sendCommand(tmpBuf);
   free(tmpBuf);
@@ -155,7 +155,7 @@ int SIM800L::doPost(const char* url, const char* contentType, char* payload, uns
         // Load the next char
         recvBuffer[i] = serial->read();
         // If the character is CR or LF, ignore it (it's probably part of the module communication schema)
-        if((recvBuffer == '\r') || (recvBuffer == '\n')) {
+        if((recvBuffer[i] == '\r') || (recvBuffer[i] == '\n')) {
           i--;
         }
       }
@@ -192,7 +192,7 @@ int SIM800L::doPost(const char* url, const char* contentType, char* payload, uns
 /**
  * Do HTTP/S GET on a specific URL
  */
-int SIM800L::doGet(const char* url, unsigned int serverReadTimeoutMs) {
+int SIM800L::doGet(char* url, unsigned int serverReadTimeoutMs) {
   // Cleanup the receive buffer
   for(int i = 0; i < recvBufferSize; i++) {
     recvBuffer[i] = 0;
@@ -265,7 +265,7 @@ int SIM800L::doGet(const char* url, unsigned int serverReadTimeoutMs) {
         // Load the next char
         recvBuffer[i] = serial->read();
         // If the character is CR or LF, ignore it (it's probably part of the module communication schema)
-        if((recvBuffer == '\r') || (recvBuffer == '\n')) {
+        if((recvBuffer[i] == '\r') || (recvBuffer[i] == '\n')) {
           i--;
         }
       }

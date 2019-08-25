@@ -40,8 +40,8 @@ class SIM800L {
     bool disconnectGPRS();
 
     // HTTP methods
-    int doGet(const char* url, unsigned int serverReadTimeoutMs);
-    int doPost(const char* url, const char* contentType, char* payload, unsigned int clientWriteTimeoutMs, unsigned int serverReadTimeoutMs);
+    int doGet(char* url, unsigned int serverReadTimeoutMs);
+    int doPost(char* url, char* contentType, char* payload, unsigned int clientWriteTimeoutMs, unsigned int serverReadTimeoutMs);
 
     // Obtain results after HTTP successful connections (size and buffer)
     unsigned int getDataSizeReceived();
