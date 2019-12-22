@@ -9,7 +9,7 @@ Supported features:
  * GPRS connectivity and setup
  * HTTP and HTTPS (SSL)
  * GET and POST methods
- * SoftwareSerial and HardwareSerial connections
+ * SoftwareSerial and HardwareSerial links
 
 ## To know before starting...
  * The [SIM800L](https://simcom.ee/modules/gsm-gprs/sim800/) is a GSM/GPRS module built by SIMCom.
@@ -34,10 +34,20 @@ We are using the [Postman Echo service](https://docs.postman-echo.com) to illust
 ## Usage
 
 ### Initiate the driver and the module
-First, you have to initiate the driver by telling him where are the TX pin, the RX pin and the RESET pin. The last two parameters defined the size of the buffer and if the debug mode is enabled.
-The size of the buffer is depending on the data you will receive from the web service/API. If the buffer is too small, you will receive only the first 512 bytes in this example. The driver has a buffer overflow protection.
+First, you have to initiate the driver by telling him the serial link and the RESET pin. The last two parameters defined the size of the buffer and if the debug mode is enabled.
+The size of the buffer is depending on the data you will receive from the web service/API. If the buffer is too small, you will receive only the first 512 bytes in the examples below. The driver has a buffer overflow protection.
+
+To initiate with a SoftwareSerial link (on pin TX_PIN and RX_PIN):
 ```
-SIM800L* sim800l = new SIM800L(SIM800_TX_PIN,SIM800_RX_PIN, SIM800_RST_PIN, 512, false);
+SoftwareSerial* serial = new SoftwareSerial(TX_PIN, RX_PIN);
+serial->begin(9600);
+SIM800L* sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 512, false);
+```
+
+To initiate with a hardware serial link (Serial1):
+```
+Serial1.begin(9600);
+SIM800L* sim800l = new SIM800L((Stream *)&Serial1, SIM800_RST_PIN, 512, false);
 ```
 
 ### Setup and check all aspects for the connectivity
