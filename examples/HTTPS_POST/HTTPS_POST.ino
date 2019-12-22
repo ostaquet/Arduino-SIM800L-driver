@@ -4,6 +4,8 @@
 #define SIM800_RX_PIN 7
 #define SIM800_RST_PIN 6
 
+const char APN[] = "Internet.be";
+
 SIM800L* sim800l;
 
 void setup() {
@@ -21,7 +23,7 @@ void setup() {
 void loop() {
   // Establish GPRS connectivity (5 trials)
   bool connected = false;
-  for(int i = 0; i < 5 && !connected; i++) {
+  for(uint8_t i = 0; i < 5 && !connected; i++) {
     delay(1000);
     connected = sim800l->connectGPRS();
   }
@@ -37,8 +39,10 @@ void loop() {
     return;
   }
 
+  Serial.println(F("Start HTTP POST..."));
+
   // Do HTTP POST communication with 10s for the timeout (read and write)
-  int rc = sim800l->doPost("https://postman-echo.com/post", "application/json", "{\"name\": \"morpheus\", \"job\": \"leader\"}", 10000, 10000);
+  uint16_t rc = sim800l->doPost("https://postman-echo.com/post", "application/json", "{\"name\": \"morpheus\", \"job\": \"leader\"}", 10000, 10000);
    if(rc == 200) {
     // Success, output the data received on the serial
     Serial.print(F("HTTP POST successful ("));
@@ -54,7 +58,7 @@ void loop() {
 
   // Close GPRS connectivity (5 trials)
   bool disconnected = sim800l->disconnectGPRS();
-  for(int i = 0; i < 5 && !connected; i++) {
+  for(uint8_t i = 0; i < 5 && !connected; i++) {
     delay(1000);
     disconnected = sim800l->disconnectGPRS();
   }
@@ -86,7 +90,7 @@ void setupModule() {
   Serial.println(F("Setup Complete!"));
 
   // Wait for the GSM signal
-  int signal = sim800l->getSignal();
+  uint8_t signal = sim800l->getSignal();
   while(signal <= 0) {
     delay(1000);
     signal = sim800l->getSignal();
@@ -106,9 +110,9 @@ void setupModule() {
   delay(1000);
 
   // Setup APN for GPRS configuration
-  bool success = sim800l->setupGPRS("Internet.be");
+  bool success = sim800l->setupGPRS(APN);
   while(!success) {
-    success = sim800l->setupGPRS("Internet.be");
+    success = sim800l->setupGPRS(APN);
     delay(5000);
   }
   Serial.println(F("GPRS config OK"));

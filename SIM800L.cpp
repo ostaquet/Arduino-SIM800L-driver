@@ -8,10 +8,43 @@
 #include "SIM800L.h"
 
 /**
+ * AT commands required (const char in PROGMEM to save memory usage)
+ */
+const char AT_CMD_BASE[] PROGMEM = "AT";                                      // Basic AT command to check the link
+
+const char AT_CMD_CSQ[] PROGMEM = "AT+CSQ";                                   // Check the signal strengh
+
+const char AT_CMD_CFUN_TEST[] PROGMEM = "AT+CFUN?";                           // Check the current power mode
+const char AT_CMD_CFUN0[] PROGMEM = "AT+CFUN=0";                              // Switch minimum power mode
+const char AT_CMD_CFUN1[] PROGMEM = "AT+CFUN=1";                              // Switch normal power mode
+const char AT_CMD_CFUN4[] PROGMEM = "AT+CFUN=4";                              // Switch sleep power mode
+
+const char AT_CMD_CREG_TEST[] PROGMEM = "AT+CREG?";                           // Check the network registration status
+const char AT_CMD_SAPBR_GPRS[] PROGMEM = "AT+SAPBR=3,1,\"Contype\",\"GPRS\""; // Configure the GPRS bearer
+const char AT_CMD_SAPBR_APN[] PROGMEM = "AT+SAPBR=3,1,\"APN\",";              // Configure the APN for the GPRS
+const char AT_CMD_SAPBR1[] PROGMEM = "AT+SAPBR=1,1";                          // Connect GPRS
+const char AT_CMD_SAPBR0[] PROGMEM = "AT+SAPBR=0,1";                          // Disconnect GPRS
+
+const char AT_CMD_HTTPINIT[] PROGMEM = "AT+HTTPINIT";                         // Init HTTP connection
+const char AT_CMD_HTTPPARA_CID[] PROGMEM = "AT+HTTPPARA=\"CID\",1";           // Connect HTTP through GPRS bearer
+const char AT_CMD_HTTPPARA_URL[] PROGMEM = "AT+HTTPPARA=\"URL\",";            // Define the URL to connect in HTTP
+const char AT_CMD_HTTPPARA_CONTENT[] PROGMEM = "AT+HTTPPARA=\"CONTENT\",";    // Define the content type for the HTTP POST
+const char AT_CMD_HTTPSSL_Y[] PROGMEM = "AT+HTTPSSL=1";                       // Enable SSL for HTTP connection
+const char AT_CMD_HTTPSSL_N[] PROGMEM = "AT+HTTPSSL=0";                       // Disable SSL for HTTP connection
+const char AT_CMD_HTTPACTION0[] PROGMEM = "AT+HTTPACTION=0";                  // Launch HTTP GET action
+const char AT_CMD_HTTPACTION1[] PROGMEM = "AT+HTTPACTION=1";                  // Launch HTTP POST action
+const char AT_CMD_HTTPREAD[] PROGMEM = "AT+HTTPREAD";                         // Start reading HTTP return data
+const char AT_CMD_HTTPTERM[] PROGMEM = "AT+HTTPTERM";                         // Terminate HTTP connection
+
+const char AT_RSP_OK[] PROGMEM = "OK";                                        // Expected answer OK
+const char AT_RSP_DOWNLOAD[] PROGMEM = "DOWNLOAD";                            // Expected answer DOWNLOAD
+const char AT_RSP_HTTPREAD[] PROGMEM = "+HTTPREAD: ";                         // Expected answer HTTPREAD
+
+/**
  * Constructor; Init the driver, communication with the module and shared
  * buffer used by the driver (to avoid multiples allocation)
  */
-SIM800L::SIM800L(int _pinTx, int _pinRx, int _pinRst, unsigned int _internalBufferSize, unsigned int _recvBufferSize, bool _enableDebug) {
+SIM800L::SIM800L(uint8_t _pinTx, uint8_t _pinRx, uint8_t _pinRst, uint16_t _internalBufferSize, uint16_t _recvBufferSize, bool _enableDebug) {
   if(enableDebug) Serial.println(F("SIM800L : Active SoftwareSerial"));
   
   // Setup the Software serial
@@ -54,22 +87,22 @@ SIM800L::~SIM800L() {
 /**
  * Do HTTP/S POST to a specific URL
  */
-int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int clientWriteTimeoutMs, unsigned int serverReadTimeoutMs) {
+uint16_t SIM800L::doPost(const char* url, const char* contentType, const char* payload, uint16_t clientWriteTimeoutMs, uint16_t serverReadTimeoutMs) {
   // Cleanup the receive buffer
-  for(int i = 0; i < recvBufferSize; i++) {
+  for(uint16_t i = 0; i < recvBufferSize; i++) {
     recvBuffer[i] = 0;
   }
   dataSize = 0;
 
   // Initiate HTTP/S session with the module
-  int initRC = initiateHTTP(url);
+  uint16_t initRC = initiateHTTP(url);
   if(initRC > 0) {
     return initRC;
   }
 
   // Define the content type
-  sendCommand("AT+HTTPPARA=\"CONTENT\",", contentType);
-  if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK")) {
+  sendCommand_P(AT_CMD_HTTPPARA_CONTENT, contentType);
+  if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
     if(enableDebug) Serial.println(F("SIM800L : doPost() - Unable to define the content type"));
     return 702;
   }
@@ -79,7 +112,7 @@ int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int cl
   sprintf(tmpBuf, "AT+HTTPDATA=%d,%d", strlen(payload), clientWriteTimeoutMs);
   sendCommand(tmpBuf);
   free(tmpBuf);
-  if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "DOWNLOAD")) {
+  if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_DOWNLOAD)) {
     if(enableDebug) Serial.println(F("SIM800L : doPost() - Unable to send payload to module"));
     return 707;
   }
@@ -96,8 +129,8 @@ int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int cl
   serial->flush();
 
   // Start HTTP POST action
-  sendCommand("AT+HTTPACTION=1");
-  if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK")) {
+  sendCommand_P(AT_CMD_HTTPACTION1);
+  if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
     if(enableDebug) Serial.println(F("SIM800L : doPost() - Unable to initiate POST action"));
     return 703;
   }
@@ -109,14 +142,14 @@ int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int cl
   }
 
   // Extract status information
-  int idxBase = strIndex(internalBuffer, "+HTTPACTION: 1,");
+  int16_t idxBase = strIndex(internalBuffer, "+HTTPACTION: 1,");
   if(idxBase < 0) {
     if(enableDebug) Serial.println(F("SIM800L : doPost() - Invalid answer on HTTP POST"));
     return 703;
   }
 
   // Get the HTTP return code
-  int httpRC = 0;
+  uint16_t httpRC = 0;
   httpRC += (internalBuffer[idxBase + 15] - '0') * 100;
   httpRC += (internalBuffer[idxBase + 16] - '0') * 10;
   httpRC += (internalBuffer[idxBase + 17] - '0') * 1;
@@ -129,7 +162,7 @@ int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int cl
   if(httpRC == 200) {
     // Get the size of the data to receive
     dataSize = 0;
-    for(int i = 0; (internalBuffer[idxBase + 19 + i] - '0') >= 0 && (internalBuffer[idxBase + 19 + i] - '0') <= 9; i++) {
+    for(uint16_t i = 0; (internalBuffer[idxBase + 19 + i] - '0') >= 0 && (internalBuffer[idxBase + 19 + i] - '0') <= 9; i++) {
       if(i != 0) {
         dataSize = dataSize * 10;
       }
@@ -143,13 +176,13 @@ int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int cl
     }
   
     // Ask for reading and detect the start of the reading...
-    sendCommand("AT+HTTPREAD");
-    if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "+HTTPREAD: ", 2)) {
+    sendCommand_P(AT_CMD_HTTPREAD);
+    if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_HTTPREAD, 2)) {
       return 705;
     }
   
     // Read number of bytes defined in the dataSize
-    for(int i = 0; i < dataSize && i < recvBufferSize; i++) {
+    for(uint16_t i = 0; i < dataSize && i < recvBufferSize; i++) {
       while(!serial->available());
       if(serial->available()) {
         // Load the next char
@@ -169,7 +202,7 @@ int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int cl
     }
   
     // We are expecting a final OK
-    if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK")) {
+    if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
       if(enableDebug) Serial.println(F("SIM800L : doPost() - Invalid end of data while reading HTTP result from the module"));
       return 705;
     }
@@ -181,7 +214,7 @@ int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int cl
   }
 
   // Terminate HTTP/S session
-  int termRC = terminateHTTP();
+  uint16_t termRC = terminateHTTP();
   if(termRC > 0) {
     return termRC;
   }
@@ -192,22 +225,22 @@ int SIM800L::doPost(char* url, char* contentType, char* payload, unsigned int cl
 /**
  * Do HTTP/S GET on a specific URL
  */
-int SIM800L::doGet(char* url, unsigned int serverReadTimeoutMs) {
+uint16_t SIM800L::doGet(const char* url, uint16_t serverReadTimeoutMs) {
   // Cleanup the receive buffer
-  for(int i = 0; i < recvBufferSize; i++) {
+  for(uint16_t i = 0; i < recvBufferSize; i++) {
     recvBuffer[i] = 0;
   }
   dataSize = 0;
   
   // Initiate HTTP/S session
-  int initRC = initiateHTTP(url);
+  uint16_t initRC = initiateHTTP(url);
   if(initRC > 0) {
     return initRC;
   }
 
   // Start HTTP GET action
-  sendCommand("AT+HTTPACTION=0");
-  if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK")) {
+  sendCommand_P(AT_CMD_HTTPACTION0);
+  if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
     if(enableDebug) Serial.println(F("SIM800L : doGet() - Unable to initiate GET action"));
     return 703;
   }
@@ -219,14 +252,14 @@ int SIM800L::doGet(char* url, unsigned int serverReadTimeoutMs) {
   }
 
   // Extract status information
-  int idxBase = strIndex(internalBuffer, "+HTTPACTION: 0,");
+  int16_t idxBase = strIndex(internalBuffer, "+HTTPACTION: 0,");
   if(idxBase < 0) {
     if(enableDebug) Serial.println(F("SIM800L : doGet() - Invalid answer on HTTP GET"));
     return 703;
   }
 
   // Get the HTTP return code
-  int httpRC = 0;
+  uint16_t httpRC = 0;
   httpRC += (internalBuffer[idxBase + 15] - '0') * 100;
   httpRC += (internalBuffer[idxBase + 16] - '0') * 10;
   httpRC += (internalBuffer[idxBase + 17] - '0') * 1;
@@ -239,7 +272,7 @@ int SIM800L::doGet(char* url, unsigned int serverReadTimeoutMs) {
   if(httpRC == 200) {
     // Get the size of the data to receive
     dataSize = 0;
-    for(int i = 0; (internalBuffer[idxBase + 19 + i] - '0') >= 0 && (internalBuffer[idxBase + 19 + i] - '0') <= 9; i++) {
+    for(uint16_t i = 0; (internalBuffer[idxBase + 19 + i] - '0') >= 0 && (internalBuffer[idxBase + 19 + i] - '0') <= 9; i++) {
       if(i != 0) {
         dataSize = dataSize * 10;
       }
@@ -253,13 +286,13 @@ int SIM800L::doGet(char* url, unsigned int serverReadTimeoutMs) {
     }
   
     // Ask for reading and detect the start of the reading...
-    sendCommand("AT+HTTPREAD");
-    if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "+HTTPREAD: ", 2)) {
+    sendCommand_P(AT_CMD_HTTPREAD);
+    if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_HTTPREAD, 2)) {
       return 705;
     }
   
     // Read number of bytes defined in the dataSize
-    for(int i = 0; i < dataSize && i < recvBufferSize; i++) {
+    for(uint16_t i = 0; i < dataSize && i < recvBufferSize; i++) {
       while(!serial->available());
       if(serial->available()) {
         // Load the next char
@@ -279,7 +312,7 @@ int SIM800L::doGet(char* url, unsigned int serverReadTimeoutMs) {
     }
   
     // We are expecting a final OK
-    if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK")) {
+    if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
       if(enableDebug) Serial.println(F("SIM800L : doGet() - Invalid end of data while reading HTTP result from the module"));
       return 705;
     }
@@ -291,7 +324,7 @@ int SIM800L::doGet(char* url, unsigned int serverReadTimeoutMs) {
   }
 
   // Terminate HTTP/S session
-  int termRC = terminateHTTP();
+  uint16_t termRC = terminateHTTP();
   if(termRC > 0) {
     return termRC;
   }
@@ -302,38 +335,38 @@ int SIM800L::doGet(char* url, unsigned int serverReadTimeoutMs) {
 /**
  * Meta method to initiate the HTTP/S session on the module
  */
-int SIM800L::initiateHTTP(char* url) {
+uint16_t SIM800L::initiateHTTP(const char* url) {
   // Init HTTP connection
-  sendCommand("AT+HTTPINIT");
-  if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK")) {
+  sendCommand_P(AT_CMD_HTTPINIT);
+  if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
     if(enableDebug) Serial.println(F("SIM800L : initiateHTTP() - Unable to init HTTP"));
     return 701;
   }
   
   // Use the GPRS bearer
-  sendCommand("AT+HTTPPARA=\"CID\",1");
-  if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK")) {
+  sendCommand_P(AT_CMD_HTTPPARA_CID);
+  if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
     if(enableDebug) Serial.println(F("SIM800L : initiateHTTP() - Unable to define bearer"));
     return 702;
   }
 
   // Define URL to look for
-  sendCommand("AT+HTTPPARA=\"URL\",", url);
-  if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK")) {
+  sendCommand_P(AT_CMD_HTTPPARA_URL, url);
+  if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
     if(enableDebug) Serial.println(F("SIM800L : initiateHTTP() - Unable to define the URL"));
     return 702;
   }
 
   // HTTP or HTTPS
   if(strIndex(url, "https://") == 0) {
-    sendCommand("AT+HTTPSSL=1");
-    if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK")) {
+    sendCommand_P(AT_CMD_HTTPSSL_Y);
+    if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
       if(enableDebug) Serial.println(F("SIM800L : initiateHTTP() - Unable to switch to HTTPS"));
       return 702;
     }
   } else {
-    sendCommand("AT+HTTPSSL=0");
-    if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK")) {
+    sendCommand_P(AT_CMD_HTTPSSL_N);
+    if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
       if(enableDebug) Serial.println(F("SIM800L : initiateHTTP() - Unable to switch to HTTP"));
       return 702;
     }
@@ -345,10 +378,10 @@ int SIM800L::initiateHTTP(char* url) {
 /**
  * Meta method to terminate the HTTP/S session on the module
  */
-int SIM800L::terminateHTTP() {
+uint16_t SIM800L::terminateHTTP() {
   // Close HTTP connection
-  sendCommand("AT+HTTPTERM");
-  if(!readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK")) {
+  sendCommand_P(AT_CMD_HTTPTERM);
+  if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
     if(enableDebug) Serial.println(F("SIM800L : terminateHTTP() - Unable to close HTTP session"));
     return 706;
   }
@@ -380,7 +413,7 @@ void SIM800L::reset() {
 /**
  * Return the size of data received after the last successful HTTP connection
  */
-unsigned int SIM800L::getDataSizeReceived() {
+uint8_t SIM800L::getDataSizeReceived() {
   return dataSize;
 }
 
@@ -395,24 +428,24 @@ char* SIM800L::getDataReceived() {
  * Status function: Check if AT command works
  */
 bool SIM800L::isReady() {
-  sendCommand("AT");
-  return readResponseCheckAnswer(DEFAULT_TIMEOUT, "OK");
+  sendCommand_P(AT_CMD_BASE);
+  return readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK);
 }
 
 /**
  * Status function: Check the power mode
  */
 PowerMode SIM800L::getPowerMode() {
-  sendCommand("AT+CFUN?");
+  sendCommand_P(AT_CMD_CFUN_TEST);
   if(readResponse(DEFAULT_TIMEOUT)) {
     // Check if there is an error
-    int errIdx = strIndex(internalBuffer, "ERROR");
+    int16_t errIdx = strIndex(internalBuffer, "ERROR");
     if(errIdx > 0) {
       return POW_ERROR;
     }
 
     // Extract the value
-    int idx = strIndex(internalBuffer, "+CFUN: ");
+    int16_t idx = strIndex(internalBuffer, "+CFUN: ");
     char value = internalBuffer[idx + 7];
 
     // Prepare the clear output
@@ -430,16 +463,16 @@ PowerMode SIM800L::getPowerMode() {
  * Status function: Check if the module is registered on the network
  */
 NetworkRegistration SIM800L::getRegistrationStatus() {
-  sendCommand("AT+CREG?");
+  sendCommand_P(AT_CMD_CREG_TEST);
   if(readResponse(DEFAULT_TIMEOUT)) {
     // Check if there is an error
-    int errIdx = strIndex(internalBuffer, "ERROR");
+    int16_t errIdx = strIndex(internalBuffer, "ERROR");
     if(errIdx > 0) {
       return NET_ERROR;
     }
 
     // Extract the value
-    int idx = strIndex(internalBuffer, "+CREG: ");
+    int16_t idx = strIndex(internalBuffer, "+CREG: ");
     char value = internalBuffer[idx + 9];
   
     // Prepare the clear output
@@ -460,34 +493,35 @@ NetworkRegistration SIM800L::getRegistrationStatus() {
  * Setup the GPRS connectivity
  * As input, give the APN string of the operator
  */
-bool SIM800L::setupGPRS(char* apn) {
+bool SIM800L::setupGPRS(const char* apn) {
   // Prepare the GPRS connection as the bearer
-  sendCommand("AT+SAPBR=3,1,\"Contype\",\"GPRS\"");
-  if(!readResponseCheckAnswer(20000, "OK")) {
+  sendCommand_P(AT_CMD_SAPBR_GPRS);
+  if(!readResponseCheckAnswer_P(20000, AT_RSP_OK)) {
     return false;
   }
 
   // Set the config of the bearer with the APN
-  sendCommand("AT+SAPBR=3,1,\"APN\",", apn);
-  return readResponseCheckAnswer(20000, "OK");
+  sendCommand_P(AT_CMD_SAPBR_APN, apn);
+  return readResponseCheckAnswer_P(20000, AT_RSP_OK);
 }
 
 /**
  * Open the GPRS connectivity
  */
 bool SIM800L::connectGPRS() {
-  sendCommand("AT+SAPBR=1,1");
+  sendCommand_P(AT_CMD_SAPBR1);
   // Timout is max 85 seconds according to SIM800 specifications
-  return readResponseCheckAnswer(85000, "OK");
+  // We will wait for 65s to be within uint16_t
+  return readResponseCheckAnswer_P(65000, AT_RSP_OK);
 }
 
 /**
  * Close the GPRS connectivity
  */
 bool SIM800L::disconnectGPRS() {
-  sendCommand("AT+SAPBR=0,1");
+  sendCommand_P(AT_CMD_SAPBR0);
   // Timout is max 65 seconds according to SIM800 specifications
-  return readResponseCheckAnswer(65000, "OK");
+  return readResponseCheckAnswer_P(65000, AT_RSP_OK);
 }
 
 /**
@@ -523,14 +557,14 @@ bool SIM800L::setPowerMode(PowerMode powerMode) {
   char value;
   switch(powerMode) {
     case MINIMUM : 
-      sendCommand("AT+CFUN=0");
+      sendCommand_P(AT_CMD_CFUN0);
       break;
     case SLEEP :
-      sendCommand("AT+CFUN=4");
+      sendCommand_P(AT_CMD_CFUN4);
       break;
     case NORMAL :
     default :
-      sendCommand("AT+CFUN=1");
+      sendCommand_P(AT_CMD_CFUN1);
   }
 
   // Read but don't care about the result
@@ -546,24 +580,24 @@ bool SIM800L::setPowerMode(PowerMode powerMode) {
 /**
  * Status function: Check the strengh of the signal
  */
-int SIM800L::getSignal() {
-  sendCommand("AT+CSQ");
+uint8_t SIM800L::getSignal() {
+  sendCommand_P(AT_CMD_CSQ);
   if(readResponse(DEFAULT_TIMEOUT)) {
-    int idxBase = strIndex(internalBuffer, "AT+CSQ");
+    int16_t idxBase = strIndex(internalBuffer, "AT+CSQ");
     if(idxBase != 0) {
-      return -1;
+      return 0;
     }
-    int idxEnd = strIndex(internalBuffer, ",", idxBase);
-    int value = internalBuffer[idxEnd - 1] - '0';
+    int16_t idxEnd = strIndex(internalBuffer, ",", idxBase);
+    uint8_t value = internalBuffer[idxEnd - 1] - '0';
     if(internalBuffer[idxEnd - 2] != ' ') {
       value += (internalBuffer[idxEnd - 2] - '0') * 10;
     }
     if(value > 31) {
-      return -1;
+      return 0;
     }
     return value;
   }
-  return -1;
+  return 0;
 }
 
 /*****************************************************************************************
@@ -573,10 +607,10 @@ int SIM800L::getSignal() {
  * Find string "findStr" in another string "str"
  * Returns true if found, false elsewhere
  */
-int SIM800L::strIndex(char* str, char* findStr, int startIdx) {
-  int firstIndex = -1;
-  int sizeMatch = 0;
-  for(int i = startIdx; i < strlen(str); i++) {
+int16_t SIM800L::strIndex(const char* str, const char* findStr, uint16_t startIdx) {
+  int16_t firstIndex = -1;
+  int16_t sizeMatch = 0;
+  for(int16_t i = startIdx; i < strlen(str); i++) {
     if(sizeMatch >= strlen(findStr)) {
       break;
     }
@@ -602,7 +636,7 @@ int SIM800L::strIndex(char* str, char* findStr, int startIdx) {
  * Init internal buffer
  */
 void SIM800L::initInternalBuffer() {
-  for(int i = 0; i < internalBufferSize; i++) {
+  for(uint16_t i = 0; i < internalBufferSize; i++) {
     internalBuffer[i] = '\0';
   }
 }
@@ -613,7 +647,7 @@ void SIM800L::initInternalBuffer() {
 /**
  * Send AT command to the module
  */
-void SIM800L::sendCommand(char* command) {
+void SIM800L::sendCommand(const char* command) {
   if(enableDebug) {
     Serial.print(F("SIM800L : Send \""));
     Serial.print(command);
@@ -629,9 +663,18 @@ void SIM800L::sendCommand(char* command) {
 }
 
 /**
+ * Send AT command coming from the PROGMEM
+ */
+void SIM800L::sendCommand_P(const char* command) {
+  char cmdBuff[32];
+  strcpy_P(cmdBuff, command);
+  sendCommand(cmdBuff);
+}
+
+/**
  * Send AT command to the module with a parameter
  */
-void SIM800L::sendCommand(char* command, char* parameter) {
+void SIM800L::sendCommand(const char* command, const char* parameter) {
   if(enableDebug) {
     Serial.print(F("SIM800L : Send \""));
     Serial.print(command);
@@ -653,15 +696,24 @@ void SIM800L::sendCommand(char* command, char* parameter) {
 }
 
 /**
+ * Send AT command coming from the PROGMEM with a parameter
+ */
+void SIM800L::sendCommand_P(const char* command, const char* parameter) {
+  char cmdBuff[32];
+  strcpy_P(cmdBuff, command);
+  sendCommand(cmdBuff, parameter);
+}
+
+/**
  * Read from module and forget the data
  */
-void SIM800L::readToForget(unsigned int timeout) {
-  int currentSizeResponse = 0;
+void SIM800L::readToForget(uint16_t timeout) {
+  uint16_t currentSizeResponse = 0;
 
   // Initialize internal buffer
   initInternalBuffer();
 
-  unsigned long timerStart = millis();
+  uint32_t timerStart = millis();
 
   while (1) {
     // While there is data available on the buffer, read it until the max size of the response
@@ -694,10 +746,14 @@ void SIM800L::readToForget(unsigned int timeout) {
 /**
  * Read from module and expect a specific answer (timeout in millisec)
  */
-bool SIM800L::readResponseCheckAnswer(unsigned int timeout, char* expectedAnswer, unsigned int crlfToWait) {
+bool SIM800L::readResponseCheckAnswer_P(uint16_t timeout, const char* expectedAnswer, uint8_t crlfToWait) {
   if(readResponse(timeout, crlfToWait)) {
+    // Prepare the local expected answer
+    char rspBuff[16];
+    strcpy_P(rspBuff, expectedAnswer);
+    
     // Check if it's the expected answer
-    int idx = strIndex(internalBuffer, expectedAnswer);
+    int16_t idx = strIndex(internalBuffer, rspBuff);
     if(idx > 0) {
       return true;
     }
@@ -709,15 +765,15 @@ bool SIM800L::readResponseCheckAnswer(unsigned int timeout, char* expectedAnswer
  * Read from the module for a specific number of CRLF
  * True if we have some data
  */
-bool SIM800L::readResponse(unsigned int timeout, unsigned int crlfToWait) {
-  int currentSizeResponse = 0;
+bool SIM800L::readResponse(uint16_t timeout, uint8_t crlfToWait) {
+  uint16_t currentSizeResponse = 0;
   bool seenCR = false;
-  int countCRLF = 0;
+  uint8_t countCRLF = 0;
 
   // First of all, cleanup the buffer
   initInternalBuffer();
   
-  unsigned long timerStart = millis();
+  uint32_t timerStart = millis();
 
   while(1) {
     // While there is data available on the buffer, read it until the max size of the response
