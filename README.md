@@ -1,7 +1,15 @@
 # Arduino-SIM800L-driver
 Arduino driver for GSM/GPRS module SIMCom SIM800L to make HTTP/S connections with GET and POST methods
 
-This is a comprehensive Arduino library to make HTTP or HTTPS communication through the SIMCom SIM800L module. The library supports the HTTP, the HTTPS, GET method, POST method, GPRS setup, power mode and network registration. The library has been designed to limit the memory usage by working with the same shared buffer all the time.
+This is a comprehensive Arduino library to make HTTP or HTTPS communication through the SIMCom SIM800L module. The library has been designed to limit the memory usage by working with the same shared buffer all the time.
+
+Supported features:
+ * Power management of the SIM800L module
+ * Network registration and signal strengh measurement
+ * GPRS connectivity and setup
+ * HTTP and HTTPS (SSL)
+ * GET and POST methods
+ * SoftwareSerial and HardwareSerial connections
 
 ## To know before starting...
  * The [SIM800L](https://simcom.ee/modules/gsm-gprs/sim800/) is a GSM/GPRS module built by SIMCom.
