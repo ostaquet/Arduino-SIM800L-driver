@@ -18,7 +18,7 @@ Supported features:
  * As the chipset can draw 2A maximum, it is better to use an external power source. __Using the USB power through the computer is not enough while HTTP communication__.
 
 ## How to install the library?
- 1. Click on *Clone or download* on GitHub
+ 1. Click on *Clone or download* on GitHub or [download the latest release](https://github.com/ostaquet/Arduino-SIM800L-driver/releases)
  2. Choose *Download ZIP*
  3. Open Arduino IDE
  4. In the menu *Sketch* -> *Include Library* -> *Add .ZIP Library*
