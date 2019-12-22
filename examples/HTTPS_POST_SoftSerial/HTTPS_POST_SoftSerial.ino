@@ -1,3 +1,33 @@
+/********************************************************************************
+ * Example of HTTPS POST with SoftwareSerial and Arduino-SIM800L-driver         *
+ *                                                                              *
+ * Author: Olivier Staquet                                                      *
+ * Last version available on https://github.com/ostaquet/Arduino-SIM800L-driver *
+ ********************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2019 Olivier Staquet
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *******************************************************************************/
+#include <SoftwareSerial.h>
+
 #include "SIM800L.h"
  
 #define SIM800_TX_PIN 8
@@ -5,6 +35,9 @@
 #define SIM800_RST_PIN 6
 
 const char APN[] = "Internet.be";
+const char URL[] = "https://postman-echo.com/post";
+const char CONTENT_TYPE[] = "application/json";
+const char PAYLOAD[] = "{\"name\": \"morpheus\", \"job\": \"leader\"}";
 
 SIM800L* sim800l;
 
@@ -12,9 +45,14 @@ void setup() {
   // Initialize Serial Monitor for debugging
   Serial.begin(115200);
   while(!Serial);
+
+  // Initialize a SoftwareSerial
+  SoftwareSerial* serial = new SoftwareSerial(SIM800_TX_PIN, SIM800_RX_PIN);
+  serial->begin(9600);
+  delay(1000);
    
   // Initialize SIM800L driver with an internal buffer of 200 bytes and a reception buffer of 512 bytes, debug disabled
-  sim800l = new SIM800L(SIM800_TX_PIN,SIM800_RX_PIN, SIM800_RST_PIN, 200, 512, false);
+  sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512, false);
 
   // Setup module for GPRS communication
   setupModule();
@@ -42,7 +80,7 @@ void loop() {
   Serial.println(F("Start HTTP POST..."));
 
   // Do HTTP POST communication with 10s for the timeout (read and write)
-  uint16_t rc = sim800l->doPost("https://postman-echo.com/post", "application/json", "{\"name\": \"morpheus\", \"job\": \"leader\"}", 10000, 10000);
+  uint16_t rc = sim800l->doPost(URL, CONTENT_TYPE, PAYLOAD, 10000, 10000);
    if(rc == 200) {
     // Success, output the data received on the serial
     Serial.print(F("HTTP POST successful ("));

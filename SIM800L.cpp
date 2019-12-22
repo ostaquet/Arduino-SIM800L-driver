@@ -1,9 +1,32 @@
 /********************************************************************************
  * Arduino-SIM800L-driver                                                       *
  * ----------------------                                                       *
- * Arduino driver for GSM module SIM800L                                        *
+ * Arduino driver for GSM/GPRS module SIMCom SIM800L to make HTTP/S connections *
+ * with GET and POST methods                                                    *
  * Author: Olivier Staquet                                                      *
  * Last version available on https://github.com/ostaquet/Arduino-SIM800L-driver *
+ ********************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2019 Olivier Staquet
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  *******************************************************************************/
 #include "SIM800L.h"
 
@@ -44,13 +67,11 @@ const char AT_RSP_HTTPREAD[] PROGMEM = "+HTTPREAD: ";                         //
  * Constructor; Init the driver, communication with the module and shared
  * buffer used by the driver (to avoid multiples allocation)
  */
-SIM800L::SIM800L(uint8_t _pinTx, uint8_t _pinRx, uint8_t _pinRst, uint16_t _internalBufferSize, uint16_t _recvBufferSize, bool _enableDebug) {
+SIM800L::SIM800L(Stream* _stream, uint8_t _pinRst, uint16_t _internalBufferSize, uint16_t _recvBufferSize, bool _enableDebug) {
   if(enableDebug) Serial.println(F("SIM800L : Active SoftwareSerial"));
   
   // Setup the Software serial
-  serial = new SoftwareSerial(_pinTx,_pinRx);
-  serial->begin(9600);
-  delay(1000);
+  stream = _stream;
 
   // Store local variables
   enableDebug = _enableDebug;
@@ -122,11 +143,11 @@ uint16_t SIM800L::doPost(const char* url, const char* contentType, const char* p
     Serial.print(F("SIM800L : doPost() - Payload to send : "));
     Serial.println(payload);
   }
-  serial->listen();
-  serial->flush();
+  
+  stream->flush();
   readToForget(500);
-  serial->write(payload);
-  serial->flush();
+  stream->write(payload);
+  stream->flush();
 
   // Start HTTP POST action
   sendCommand_P(AT_CMD_HTTPACTION1);
@@ -183,10 +204,10 @@ uint16_t SIM800L::doPost(const char* url, const char* contentType, const char* p
   
     // Read number of bytes defined in the dataSize
     for(uint16_t i = 0; i < dataSize && i < recvBufferSize; i++) {
-      while(!serial->available());
-      if(serial->available()) {
+      while(!stream->available());
+      if(stream->available()) {
         // Load the next char
-        recvBuffer[i] = serial->read();
+        recvBuffer[i] = stream->read();
         // If the character is CR or LF, ignore it (it's probably part of the module communication schema)
         if((recvBuffer[i] == '\r') || (recvBuffer[i] == '\n')) {
           i--;
@@ -293,10 +314,10 @@ uint16_t SIM800L::doGet(const char* url, uint16_t serverReadTimeoutMs) {
   
     // Read number of bytes defined in the dataSize
     for(uint16_t i = 0; i < dataSize && i < recvBufferSize; i++) {
-      while(!serial->available());
-      if(serial->available()) {
+      while(!stream->available());
+      if(stream->available()) {
         // Load the next char
-        recvBuffer[i] = serial->read();
+        recvBuffer[i] = stream->read();
         // If the character is CR or LF, ignore it (it's probably part of the module communication schema)
         if((recvBuffer[i] == '\r') || (recvBuffer[i] == '\n')) {
           i--;
@@ -403,9 +424,9 @@ void SIM800L::reset() {
   delay(5000);
 
   // Purge the serial
-  serial->flush();
-  while (serial->available()) {
-    serial->read();
+  stream->flush();
+  while (stream->available()) {
+    stream->read();
   }
   
 }
@@ -654,12 +675,11 @@ void SIM800L::sendCommand(const char* command) {
     Serial.println(F("\""));
   }
   
-  serial->listen();
-  serial->flush();
+  stream->flush();
   readToForget(500);
-  serial->write(command);
-  serial->write("\r\n");
-  serial->flush();
+  stream->write(command);
+  stream->write("\r\n");
+  stream->flush();
 }
 
 /**
@@ -684,15 +704,14 @@ void SIM800L::sendCommand(const char* command, const char* parameter) {
     Serial.println(F("\""));
   }
   
-  serial->listen();
-  serial->flush();
+  stream->flush();
   readToForget(500);
-  serial->write(command);
-  serial->write("\"");
-  serial->write(parameter);
-  serial->write("\"");
-  serial->write("\r\n");
-  serial->flush();
+  stream->write(command);
+  stream->write("\"");
+  stream->write(parameter);
+  stream->write("\"");
+  stream->write("\r\n");
+  stream->flush();
 }
 
 /**
@@ -717,9 +736,9 @@ void SIM800L::readToForget(uint16_t timeout) {
 
   while (1) {
     // While there is data available on the buffer, read it until the max size of the response
-    if(serial->available()) {
+    if(stream->available()) {
       // Load the next char
-      internalBuffer[currentSizeResponse] = serial->read();
+      internalBuffer[currentSizeResponse] = stream->read();
       currentSizeResponse++;
 
       // Avoid buffer overflow
@@ -777,9 +796,9 @@ bool SIM800L::readResponse(uint16_t timeout, uint8_t crlfToWait) {
 
   while(1) {
     // While there is data available on the buffer, read it until the max size of the response
-    if(serial->available()) {
+    if(stream->available()) {
       // Load the next char
-      internalBuffer[currentSizeResponse] = serial->read();
+      internalBuffer[currentSizeResponse] = stream->read();
 
       // Detect end of transmission (CRLF)
       if(internalBuffer[currentSizeResponse] == '\r') {
