@@ -144,10 +144,10 @@ uint16_t SIM800L::doPost(const char* url, const char* contentType, const char* p
     Serial.println(payload);
   }
   
-  stream->flush();
-  readToForget(500);
+  purgeSerial();
   stream->write(payload);
   stream->flush();
+  delay(500);
 
   // Start HTTP POST action
   sendCommand_P(AT_CMD_HTTPACTION1);
@@ -417,11 +417,11 @@ void SIM800L::reset() {
   
   // Reset the device
   digitalWrite(pinReset, HIGH);
-  delay(1000);
+  delay(500);
   digitalWrite(pinReset, LOW);
-  delay(2000);
+  delay(500);
   digitalWrite(pinReset, HIGH);
-  delay(5000);
+  delay(1000);
 
   // Purge the serial
   stream->flush();
@@ -589,7 +589,7 @@ bool SIM800L::setPowerMode(PowerMode powerMode) {
   }
 
   // Read but don't care about the result
-  readToForget(10000);
+  purgeSerial();
 
   // Check the current power mode
   currentPowerMode = getPowerMode();
@@ -675,11 +675,10 @@ void SIM800L::sendCommand(const char* command) {
     Serial.println(F("\""));
   }
   
-  stream->flush();
-  readToForget(500);
+  purgeSerial();
   stream->write(command);
   stream->write("\r\n");
-  stream->flush();
+  purgeSerial();
 }
 
 /**
@@ -704,14 +703,13 @@ void SIM800L::sendCommand(const char* command, const char* parameter) {
     Serial.println(F("\""));
   }
   
-  stream->flush();
-  readToForget(500);
+  purgeSerial();
   stream->write(command);
   stream->write("\"");
   stream->write(parameter);
   stream->write("\"");
   stream->write("\r\n");
-  stream->flush();
+  purgeSerial();
 }
 
 /**
@@ -724,42 +722,14 @@ void SIM800L::sendCommand_P(const char* command, const char* parameter) {
 }
 
 /**
- * Read from module and forget the data
+ * Purge the serial data
  */
-void SIM800L::readToForget(uint16_t timeout) {
-  uint16_t currentSizeResponse = 0;
-
-  // Initialize internal buffer
-  initInternalBuffer();
-
-  uint32_t timerStart = millis();
-
-  while (1) {
-    // While there is data available on the buffer, read it until the max size of the response
-    if(stream->available()) {
-      // Load the next char
-      internalBuffer[currentSizeResponse] = stream->read();
-      currentSizeResponse++;
-
-      // Avoid buffer overflow
-      if(currentSizeResponse == internalBufferSize) {
-        if(enableDebug) Serial.println(F("SIM800L : Received to forget maximum buffer size"));
-        break;
-      }
-    }
-
-    // If timeout, abord the reading
-    if(millis() - timerStart > timeout) {
-      if(enableDebug) Serial.println(F("SIM800L : Receive to forget timeout"));
-      return;
-    }
+void SIM800L::purgeSerial() {
+  stream->flush();
+  while (stream->available()) {
+    stream->read();
   }
-
-  if(enableDebug) {
-    Serial.print(F("SIM800L : Receive to forget \""));
-    Serial.print(internalBuffer);
-    Serial.println(F("\""));
-  }
+  stream->flush();
 }
 
 /**

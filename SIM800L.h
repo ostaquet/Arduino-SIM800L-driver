@@ -78,12 +78,14 @@ class SIM800L {
     void sendCommand(const char* command, const char* parameter);
     // Send command with parameter within quotes from PROGMEM (template : command"parameter")
     void sendCommand_P(const char* command, const char* parameter);
+    
     // Read from module (timeout in millisec)
     bool readResponse(uint16_t timeout, uint8_t crlfToWait = 2);
     // Read from module and expect a specific answer defined in PROGMEM (timeout in millisec)
     bool readResponseCheckAnswer_P(uint16_t timeout, const char* expectedAnswer, uint8_t crlfToWait = 2);
-    // Read from module but forget what is received
-    void readToForget(uint16_t timeout);
+    
+    // Purge the serial
+    void purgeSerial();
     
     // Find string in another string
     int16_t strIndex(const char* str, const char* findStr, uint16_t startIdx = 0);

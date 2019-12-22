@@ -1,5 +1,5 @@
 /********************************************************************************
- * Example of HTTPS POST with SoftwareSerial and Arduino-SIM800L-driver         *
+ * Example of HTTPS POST with Serial1 (Mega2560) and Arduino-SIM800L-driver     *
  *                                                                              *
  * Author: Olivier Staquet                                                      *
  * Last version available on https://github.com/ostaquet/Arduino-SIM800L-driver *
@@ -26,12 +26,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *******************************************************************************/
-#include <SoftwareSerial.h>
-
 #include "SIM800L.h"
 
-#define SIM800_TX_PIN 11
-#define SIM800_RX_PIN 10
 #define SIM800_RST_PIN 6
 
 const char APN[] = "Internet.be";
@@ -46,13 +42,12 @@ void setup() {
   Serial.begin(115200);
   while(!Serial);
 
-  // Initialize a SoftwareSerial
-  SoftwareSerial* serial = new SoftwareSerial(SIM800_TX_PIN, SIM800_RX_PIN);
-  serial->begin(9600);
+  // Initialize the hardware Serial1
+  Serial1.begin(9600);
   delay(1000);
    
   // Initialize SIM800L driver with an internal buffer of 200 bytes and a reception buffer of 512 bytes, debug disabled
-  sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512, false);
+  sim800l = new SIM800L((Stream *)&Serial1, SIM800_RST_PIN, 200, 512, false);
 
   // Setup module for GPRS communication
   setupModule();

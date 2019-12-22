@@ -1,5 +1,5 @@
 /********************************************************************************
- * Example of HTTPS POST with SoftwareSerial and Arduino-SIM800L-driver         *
+ * Example of HTTPS GET with Serial1 (Mega2560) and Arduino-SIM800L-driver      *
  *                                                                              *
  * Author: Olivier Staquet                                                      *
  * Last version available on https://github.com/ostaquet/Arduino-SIM800L-driver *
@@ -26,33 +26,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *******************************************************************************/
-#include <SoftwareSerial.h>
-
 #include "SIM800L.h"
 
-#define SIM800_TX_PIN 11
-#define SIM800_RX_PIN 10
 #define SIM800_RST_PIN 6
 
 const char APN[] = "Internet.be";
-const char URL[] = "https://postman-echo.com/post";
-const char CONTENT_TYPE[] = "application/json";
-const char PAYLOAD[] = "{\"name\": \"morpheus\", \"job\": \"leader\"}";
+const char URL[] = "https://postman-echo.com/get?foo1=bar1&foo2=bar2";
 
 SIM800L* sim800l;
 
-void setup() {
+void setup() {  
   // Initialize Serial Monitor for debugging
   Serial.begin(115200);
   while(!Serial);
 
-  // Initialize a SoftwareSerial
-  SoftwareSerial* serial = new SoftwareSerial(SIM800_TX_PIN, SIM800_RX_PIN);
-  serial->begin(9600);
+  // Initialize the hardware Serial1
+  Serial1.begin(9600);
   delay(1000);
    
   // Initialize SIM800L driver with an internal buffer of 200 bytes and a reception buffer of 512 bytes, debug disabled
-  sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512, false);
+  sim800l = new SIM800L((Stream *)&Serial1, SIM800_RST_PIN, 200, 512, false);
 
   // Setup module for GPRS communication
   setupModule();
@@ -77,20 +70,20 @@ void loop() {
     return;
   }
 
-  Serial.println(F("Start HTTP POST..."));
+  Serial.println(F("Start HTTP GET..."));
 
-  // Do HTTP POST communication with 10s for the timeout (read and write)
-  uint16_t rc = sim800l->doPost(URL, CONTENT_TYPE, PAYLOAD, 10000, 10000);
+  // Do HTTP GET communication with 10s for the timeout (read)
+  uint16_t rc = sim800l->doGet(URL, 10000);
    if(rc == 200) {
     // Success, output the data received on the serial
-    Serial.print(F("HTTP POST successful ("));
+    Serial.print(F("HTTP GET successful ("));
     Serial.print(sim800l->getDataSizeReceived());
     Serial.println(F(" bytes)"));
     Serial.print(F("Received : "));
     Serial.println(sim800l->getDataReceived());
   } else {
     // Failed...
-    Serial.print(F("HTTP POST error "));
+    Serial.print(F("HTTP GET error "));
     Serial.println(rc);
   }
 

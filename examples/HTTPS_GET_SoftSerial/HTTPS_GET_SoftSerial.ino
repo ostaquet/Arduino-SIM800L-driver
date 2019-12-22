@@ -30,8 +30,8 @@
 
 #include "SIM800L.h"
 
-#define SIM800_TX_PIN 8
-#define SIM800_RX_PIN 7
+#define SIM800_TX_PIN 11
+#define SIM800_RX_PIN 10
 #define SIM800_RST_PIN 6
 
 const char APN[] = "Internet.be";
