@@ -10,6 +10,7 @@ Supported features:
  * HTTP and HTTPS (SSL)
  * GET and POST methods
  * SoftwareSerial and HardwareSerial links
+ * Configurable debug serial
 
 ## To know before starting...
  * The [SIM800L](https://simcom.ee/modules/gsm-gprs/sim800/) is a GSM/GPRS module built by SIMCom.
@@ -41,13 +42,13 @@ To initiate with a SoftwareSerial link (on pin TX_PIN and RX_PIN):
 ```
 SoftwareSerial* serial = new SoftwareSerial(TX_PIN, RX_PIN);
 serial->begin(9600);
-SIM800L* sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 512, false);
+SIM800L* sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 512);
 ```
 
 To initiate with a hardware serial link (Serial1):
 ```
 Serial1.begin(9600);
-SIM800L* sim800l = new SIM800L((Stream *)&Serial1, SIM800_RST_PIN, 512, false);
+SIM800L* sim800l = new SIM800L((Stream *)&Serial1, SIM800_RST_PIN, 512);
 ```
 
 ### Setup and check all aspects for the connectivity
