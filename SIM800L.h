@@ -41,7 +41,14 @@ enum NetworkRegistration {NOT_REGISTERED, REGISTERED_HOME, SEARCHING, DENIED, NE
 class SIM800L {
   public:
     // Initialize the driver
-    SIM800L(Stream* _stream, uint8_t _pinRst, uint16_t _internalBufferSize = 128, uint16_t _recvBufferSize = 256, bool _enableDebug = false);
+    // Parameters:
+    //  _stream : Stream opened to the SIM800L module (Software or Hardware, usually 9600 bps)
+    //  _pinRst : pin to the reset of the SIM800L module
+    //  _internalBufferSize : size in bytes of the internal buffer to handle general IO with the module
+    //                        (including URL and maximum payload to send through POST method)
+    //  _recvBufferSize : size in bytes of the reception buffer (max data to receive from GET or POST)
+    //  _debugStream : Stream opened to the debug console (Software of Hardware)
+    SIM800L(Stream* _stream, uint8_t _pinRst, uint16_t _internalBufferSize = 128, uint16_t _recvBufferSize = 256, Stream* _debugStream = NULL);
     ~SIM800L();
 
     // Force a reset of the module
@@ -53,7 +60,7 @@ class SIM800L {
     PowerMode getPowerMode();
     NetworkRegistration getRegistrationStatus();
 
-    // Define the power mode
+    // Define the power mode (for parameter: see PowerMode enum)
     bool setPowerMode(PowerMode powerMode);
 
     // Enable/disable GPRS
@@ -99,7 +106,10 @@ class SIM800L {
 
   private:
     // Serial line with SIM800L
-    Stream* stream;
+    Stream* stream = NULL;
+
+    // Serial console for the debut
+    Stream* debugStream = NULL;
 
     // Details about the circuit: pins
     uint8_t pinReset = 0;

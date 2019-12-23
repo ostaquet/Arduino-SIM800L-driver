@@ -50,7 +50,10 @@ void setup() {
   delay(1000);
    
   // Initialize SIM800L driver with an internal buffer of 200 bytes and a reception buffer of 512 bytes, debug disabled
-  sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512, false);
+  sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512);
+
+  // Equivalent line with the debug enabled on the Serial
+  //sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512, (Stream *)&Serial);
 
   // Setup module for GPRS communication
   setupModule();
