@@ -14,7 +14,7 @@ Supported features:
 
 ## To know before starting...
  * The [SIM800L](https://simcom.ee/modules/gsm-gprs/sim800/) is a GSM/GPRS module built by SIMCom.
- * The communication with the SIM800L module relies on AT commands. The available AT commands are described in the [SIM800 series AT Command Manual](datasheet/SIM800%20Series_AT%20Command%20Manual_V1.09.pdf).
+ * The communication with the SIM800L module relies on AT commands. The available AT commands are described in the [SIM800 series AT Command Manual](extras/SIM800%20Series_AT%20Command%20Manual_V1.09.pdf).
  * The original module is working with an input voltage of 3.7V to 4.2V. So, __don't connect the naked module directly on the Arduino__. I personnaly use a module with voltage convertor from/to 5V like [this one](https://www.amazon.fr/dp/B073TF2QKL).
  * As the chipset can draw 2A maximum, it is better to use an external power source. __Using the USB power through the computer is not enough while HTTP communication__.
 
