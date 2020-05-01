@@ -108,7 +108,7 @@ class SIM800L {
     // Serial line with SIM800L
     Stream* stream = NULL;
 
-    // Serial console for the debut
+    // Serial console for the debug
     Stream* debugStream = NULL;
 
     // Details about the circuit: pins
