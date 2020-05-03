@@ -36,6 +36,8 @@
 const char AT_CMD_BASE[] PROGMEM = "AT";                                      // Basic AT command to check the link
 
 const char AT_CMD_CSQ[] PROGMEM = "AT+CSQ";                                   // Check the signal strengh
+const char AT_CMD_ATI[] PROGMEM = "ATI";                                      // Output version of the module
+const char AT_CMD_GMR[] PROGMEM = "AT+GMR";                                   // Output version of the firmware
 
 const char AT_CMD_CFUN_TEST[] PROGMEM = "AT+CFUN?";                           // Check the current power mode
 const char AT_CMD_CFUN0[] PROGMEM = "AT+CFUN=0";                              // Switch minimum power mode
@@ -109,9 +111,7 @@ SIM800L::~SIM800L() {
  */
 uint16_t SIM800L::doPost(const char* url, const char* contentType, const char* payload, uint16_t clientWriteTimeoutMs, uint16_t serverReadTimeoutMs) {
   // Cleanup the receive buffer
-  for(uint16_t i = 0; i < recvBufferSize; i++) {
-    recvBuffer[i] = 0;
-  }
+  initRecvBuffer();
   dataSize = 0;
 
   // Initiate HTTP/S session with the module
@@ -247,9 +247,7 @@ uint16_t SIM800L::doPost(const char* url, const char* contentType, const char* p
  */
 uint16_t SIM800L::doGet(const char* url, uint16_t serverReadTimeoutMs) {
   // Cleanup the receive buffer
-  for(uint16_t i = 0; i < recvBufferSize; i++) {
-    recvBuffer[i] = 0;
-  }
+  initRecvBuffer();
   dataSize = 0;
   
   // Initiate HTTP/S session
@@ -480,6 +478,48 @@ PowerMode SIM800L::getPowerMode() {
 }
 
 /**
+ * Status function: Get version of the module
+ */
+char* SIM800L::getVersion() {
+  sendCommand_P(AT_CMD_ATI);
+  if(readResponse(DEFAULT_TIMEOUT)) {
+    // Extract the value
+    int16_t idx = strIndex(internalBuffer, "SIM");
+    int16_t idxEnd = strIndex(internalBuffer, "\r", idx+1);
+
+    // Store it on the recv buffer (not used at the moment)
+    initRecvBuffer();
+    for(uint16_t i = 0; i < idxEnd - idx; i++) {
+      recvBuffer[i] = internalBuffer[idx + i];
+    }
+    return getDataReceived();
+  } else {
+    return NULL;
+  }
+}
+
+/**
+ * Status function: Get firmware version
+ */
+char* SIM800L::getFirmware() {
+  sendCommand_P(AT_CMD_GMR);
+  if(readResponse(DEFAULT_TIMEOUT)) {
+    // Extract the value
+    int16_t idx = strIndex(internalBuffer, "AT+GMR") + 9;
+    int16_t idxEnd = strIndex(internalBuffer, "\r", idx+1);
+    
+    // Store it on the recv buffer (not used at the moment)
+    initRecvBuffer();
+    for(uint16_t i = 0; i < idxEnd - idx; i++) {
+      recvBuffer[i] = internalBuffer[idx + i];
+    }
+    return getDataReceived();
+  } else {
+    return NULL;
+  }
+}
+
+/**
  * Status function: Check if the module is registered on the network
  */
 NetworkRegistration SIM800L::getRegistrationStatus() {
@@ -658,6 +698,16 @@ int16_t SIM800L::strIndex(const char* str, const char* findStr, uint16_t startId
 void SIM800L::initInternalBuffer() {
   for(uint16_t i = 0; i < internalBufferSize; i++) {
     internalBuffer[i] = '\0';
+  }
+}
+
+/**
+ * Init recv buffer
+ */
+void SIM800L::initRecvBuffer() {
+  // Cleanup the receive buffer
+  for(uint16_t i = 0; i < recvBufferSize; i++) {
+    recvBuffer[i] = 0;
   }
 }
 

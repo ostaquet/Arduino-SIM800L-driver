@@ -59,6 +59,8 @@ class SIM800L {
     uint8_t getSignal();
     PowerMode getPowerMode();
     NetworkRegistration getRegistrationStatus();
+    char* getVersion();
+    char* getFirmware();
 
     // Define the power mode (for parameter: see PowerMode enum)
     bool setPowerMode(PowerMode powerMode);
@@ -99,6 +101,7 @@ class SIM800L {
 
     // Manage internal buffer
     void initInternalBuffer();
+    void initRecvBuffer();
 
     // Initiate HTTP/S connection
     uint16_t initiateHTTP(const char* url);
