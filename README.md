@@ -3,21 +3,23 @@ Arduino driver for GSM/GPRS module SIMCom SIM800L to make HTTP/S connections wit
 
 This is a comprehensive Arduino library to make HTTP or HTTPS communication through the SIMCom SIM800L module. The library has been designed to **limit the memory usage** by working with the same shared buffer all the time.
 
-Supported features:
+The [SIM800L](https://simcom.ee/modules/gsm-gprs/sim800/) is a GSM/GPRS module built by SIMCom. The communication with the SIM800L module relies on AT commands. The available AT commands are described in the [SIM800 series AT Command Manual](extras/SIM800%20Series_AT%20Command%20Manual_V1.09.pdf).
+
+Supported features in this library:
  * Power management of the SIM800L module
  * Network registration and signal strengh measurement
  * GPRS connectivity and setup
- * HTTP and HTTPS (SSL)
+ * HTTP and HTTPS (SSL based on in-built IP stack)
  * GET and POST methods
  * SoftwareSerial and HardwareSerial links
  * Configurable debug serial
  * Limited memory usage
 
 ## To know before starting...
- * The [SIM800L](https://simcom.ee/modules/gsm-gprs/sim800/) is a GSM/GPRS module built by SIMCom.
- * The communication with the SIM800L module relies on AT commands. The available AT commands are described in the [SIM800 series AT Command Manual](extras/SIM800%20Series_AT%20Command%20Manual_V1.09.pdf).
  * The original module is working with an input voltage of 3.7V to 4.2V. So, __don't connect the naked module directly on the Arduino__. I personnaly use a module with voltage convertor from/to 5V like [this one](https://www.amazon.fr/dp/B073TF2QKL).
  * As the chipset can draw 2A maximum, it is better to use an external power source. __Using the USB power through the computer is not enough while HTTP communication__.
+ * There are different firmware version of the SIM800L on the market. **The HTTPS connectivity is available only for R14 and above.** (You can check your version with the examples [BasicTest_HardwareSerial](https://github.com/ostaquet/Arduino-SIM800L-driver/blob/master/examples/BasicTest_HardwareSerial/BasicTest_HardwareSerial.ino) or [BasicTest_SoftSerial](https://github.com/ostaquet/Arduino-SIM800L-driver/blob/master/examples/BasicTest_SoftSerial/BasicTest_SoftSerial.ino))
+ * The firmware on the SIM800L is quite old and **doesn't support the latest cryptographic protocols** which could lead to some issues while connecting backends (typically errors 605 and 606). Read also the section below about security concerns.
 
 ## How to install the library?
 The easiest way to install the library is to go to the Library manager of the Arduino IDE and install the library.
@@ -117,7 +119,16 @@ At the end of the connection, don't forget to disconnect the GPRS to save power.
 sim800l->disconnectGPRS();
 ```
 
+## Security concerns
+
+The SIM800L latest firmware update was in January 2016. It means that using the IP stack embedded on the SIM800L is convenient but not secure. **The embedded IP stack should not be used for the transfer of critical data.**
+
+The embedded IP stack of the SIM800L only supports SSL2, SSL3 and TLS 1.0. These cryptographic protocols are considered deprecated for most of web browsers and the connection will be denied by modern backend (i.e. AWS). This will typically lead to an error `605` or `606` when you establish an HTTPS connection.
+
+In order to secure your connectivity to the backend, we strongly recommend using an up to date SSL library like [WolfSSL](https://www.wolfssl.com).
+
 ## Links
+
  * [SIM800 series AT Command Manual](extras/SIM800%20Series_AT%20Command%20Manual_V1.09.pdf)
  * [SIM800 series IP Application Note](extras/SIM800%20Series_IP_Application%20Note_V1.02.pdf)
  * [SIM800 series SSL Application Note](extras/SIM800%20Series_SSL_Application%20Note_V1.00.pdf)
