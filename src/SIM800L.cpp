@@ -375,18 +375,38 @@ uint16_t SIM800L::initiateHTTP(const char* url) {
     return 702;
   }
 
-  // HTTP or HTTPS
-  if(strIndex(url, "https://") == 0) {
-    sendCommand_P(AT_CMD_HTTPSSL_Y);
-    if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
-      if(enableDebug) debugStream->println(F("SIM800L : initiateHTTP() - Unable to switch to HTTPS"));
-      return 702;
+  // Check if the firmware support HTTPSSL command
+  bool isSupportSSL = false;
+  char* version = getVersion();
+  int16_t rIdx = strIndex(version, "R");
+  if(rIdx > 0) {
+    uint8_t releaseInt = (version[rIdx + 1] - '0') * 10 + (version[rIdx + 2] - '0');
+    
+    // The release should be greater or equals to 14 to support SSL stack
+    if(releaseInt >= 14) {
+      isSupportSSL = true;
+      if(enableDebug) debugStream->println(F("SIM800L : initiateHTTP() - Support of SSL enabled"));
+    } else {
+      isSupportSSL = false;
+      if(enableDebug) debugStream->println(F("SIM800L : initiateHTTP() - Support of SSL disabled (SIM800L firware below R14)"));
     }
-  } else {
-    sendCommand_P(AT_CMD_HTTPSSL_N);
-    if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
-      if(enableDebug) debugStream->println(F("SIM800L : initiateHTTP() - Unable to switch to HTTP"));
-      return 702;
+  }
+
+  // Send HTTPSSL command only if the version is greater or equals to 14
+  if(isSupportSSL) {
+    // HTTP or HTTPS
+    if(strIndex(url, "https://") == 0) {
+      sendCommand_P(AT_CMD_HTTPSSL_Y);
+      if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
+        if(enableDebug) debugStream->println(F("SIM800L : initiateHTTP() - Unable to switch to HTTPS"));
+        return 702;
+      }
+    } else {
+      sendCommand_P(AT_CMD_HTTPSSL_N);
+      if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
+        if(enableDebug) debugStream->println(F("SIM800L : initiateHTTP() - Unable to switch to HTTP"));
+        return 702;
+      }
     }
   }
 

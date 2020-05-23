@@ -69,7 +69,12 @@ void setup() {
     delay(1000);
     signal = sim800l->getSignal();
   }
-  Serial.print(F("Signal OK (strenght: "));
+
+  if(signal > 5) {
+    Serial.print(F("Signal OK (strenght: "));
+  } else {
+    Serial.print(F("Signal low (strenght: "));
+  }
   Serial.print(signal);
   Serial.println(F(")"));
   delay(1000);
