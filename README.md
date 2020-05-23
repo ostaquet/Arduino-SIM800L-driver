@@ -16,10 +16,10 @@ Supported features in this library:
  * Limited memory usage
 
 ## To know before starting...
- * The original module is working with an input voltage of 3.7V to 4.2V. So, __don't connect the naked module directly on the Arduino__. I personnaly use a module with voltage convertor from/to 5V like [this one](https://www.amazon.fr/dp/B073TF2QKL).
+ * The original module is working with an input voltage of 3.7V to 4.2V. So, __don't connect the naked module directly on the Arduino__. I personally use a module with voltage convertors from/to 5V like [this one](https://www.amazon.fr/dp/B073TF2QKL).
  * As the chipset can draw 2A maximum, it is better to use an external power source. __Using the USB power through the computer is not enough while HTTP communication__.
  * There are different firmware version of the SIM800L on the market. **The HTTPS connectivity is available only for R14 and above.** (You can check your version with the examples [BasicTest_HardwareSerial](https://github.com/ostaquet/Arduino-SIM800L-driver/blob/master/examples/BasicTest_HardwareSerial/BasicTest_HardwareSerial.ino) or [BasicTest_SoftSerial](https://github.com/ostaquet/Arduino-SIM800L-driver/blob/master/examples/BasicTest_SoftSerial/BasicTest_SoftSerial.ino))
- * The firmware on the SIM800L is quite old and **doesn't support the latest cryptographic protocols** which could lead to some issues while connecting backends (typically errors 605 and 606). Read also the section below about security concerns.
+ * The firmware of the SIM800L is quite old and **doesn't support the latest cryptographic protocols** which could lead to some issues while connecting backends (typically errors `605` and `606`). [Read also the section below about security concerns](https://github.com/ostaquet/Arduino-SIM800L-driver#security-concerns).
 
 ## How to install the library?
 The easiest way to install the library is to go to the Library manager of the Arduino IDE and install the library.
@@ -125,7 +125,7 @@ The SIM800L latest firmware update was in January 2016. It means that using the 
 
 The embedded IP stack of the SIM800L only supports SSL2, SSL3 and TLS 1.0. These cryptographic protocols are considered deprecated for most of web browsers and the connection will be denied by modern backend (i.e. AWS). This will typically lead to an error `605` or `606` when you establish an HTTPS connection.
 
-In order to secure your connectivity to the backend, we strongly recommend using an up to date SSL library like [WolfSSL](https://www.wolfssl.com).
+In order to secure your connectivity to the backend, we strongly recommend using an up-to-date SSL library like [WolfSSL](https://www.wolfssl.com).
 
 ## Links
 
