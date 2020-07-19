@@ -1,6 +1,10 @@
 # Arduino SIM800L HTTP connector
 Arduino driver for GSM/GPRS module SIMCom SIM800L to make HTTP/S connections with GET and POST methods
 
+[![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/ostaquet/Arduino-SIM800L-driver/blob/master/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/ostaquet/Arduino-SIM800L-driver.svg)](#releases)
+[![GitHub issues](https://img.shields.io/github/issues/ostaquet/Arduino-SIM800L-driver.svg)](https://github.com/ostaquet/Arduino-SIM800L-driver/issues)
+
 This is a comprehensive Arduino library to make HTTP or HTTPS communication through the SIMCom SIM800L module. The library has been designed to **limit the memory usage** by working with the same shared buffer all the time.
 
 The [SIM800L](https://simcom.ee/modules/gsm-gprs/sim800/) is a GSM/GPRS module built by SIMCom. The communication with the SIM800L module relies on AT commands. The available AT commands are described in the [SIM800 series AT Command Manual](extras/SIM800%20Series_AT%20Command%20Manual_V1.09.pdf).
