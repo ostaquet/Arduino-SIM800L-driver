@@ -61,6 +61,7 @@ class SIM800L {
     NetworkRegistration getRegistrationStatus();
     char* getVersion();
     char* getFirmware();
+	char* getSimCardNumber();
 
     // Define the power mode (for parameter: see PowerMode enum)
     bool setPowerMode(PowerMode powerMode);
