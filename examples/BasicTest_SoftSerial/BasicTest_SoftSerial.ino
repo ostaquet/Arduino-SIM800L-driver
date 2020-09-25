@@ -68,6 +68,10 @@ void setup() {
   Serial.print("Firmware ");
   Serial.println(sim800l->getFirmware());
 
+  // Print SIM card number
+  Serial.print("SIM card number ");
+  Serial.println(sim800l->getSimCardNumber());
+
   // Wait for the GSM signal
   uint8_t signal = sim800l->getSignal();
   while(signal <= 0) {
