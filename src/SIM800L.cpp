@@ -38,6 +38,7 @@ const char AT_CMD_BASE[] PROGMEM = "AT";                                      //
 const char AT_CMD_CSQ[] PROGMEM = "AT+CSQ";                                   // Check the signal strengh
 const char AT_CMD_ATI[] PROGMEM = "ATI";                                      // Output version of the module
 const char AT_CMD_GMR[] PROGMEM = "AT+GMR";                                   // Output version of the firmware
+const char AT_CMD_SIM_CARD[] PROGMEM = "AT+CCID";						      // Get Sim Card version
 
 const char AT_CMD_CFUN_TEST[] PROGMEM = "AT+CFUN?";                           // Check the current power mode
 const char AT_CMD_CFUN0[] PROGMEM = "AT+CFUN=0";                              // Switch minimum power mode
@@ -537,6 +538,23 @@ char* SIM800L::getFirmware() {
   } else {
     return NULL;
   }
+}
+
+/**
+ * Status function: Requests the simcard number
+ */
+char* SIM800L::getSimCardNumber() {
+  sendCommand_P(AT_CMD_SIM_CARD);
+  if(readResponse(DEFAULT_TIMEOUT)) {
+    int16_t number_idx = strIndex(internalBuffer, "AT+CCID\r\r\n");
+    if(number_idx != 0) {
+      return NULL;
+    }
+	else {
+	  return &internalBuffer[number_idx + sizeof("AT+CCID\r\r\n")];
+	}    
+  }
+  return NULL;
 }
 
 /**
