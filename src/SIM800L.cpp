@@ -546,15 +546,18 @@ char* SIM800L::getFirmware() {
 char* SIM800L::getSimCardNumber() {
   sendCommand_P(AT_CMD_SIM_CARD);
   if(readResponse(DEFAULT_TIMEOUT)) {
-    int16_t number_idx = strIndex(internalBuffer, "AT+CCID\r\r\n");
-    if(number_idx != 0) {
-      return NULL;
+    int16_t idx = strIndex(internalBuffer, "AT+CCID") + 10;
+    int16_t idxEnd = strIndex(internalBuffer, "\r", idx+1);
+
+    // Store it on the recv buffer (not used at the moment)
+    initRecvBuffer();
+    for(uint16_t i = 0; i < idxEnd - idx; i++) {
+      recvBuffer[i] = internalBuffer[idx + i];
     }
-	else {
-	  return &internalBuffer[number_idx + sizeof("AT+CCID\r\r\n")];
-	}    
+    return getDataReceived();
+  } else {
+    return NULL;
   }
-  return NULL;
 }
 
 /**
