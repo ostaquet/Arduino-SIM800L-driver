@@ -30,8 +30,8 @@
 
 #include "SIM800L.h"
 
-#define SIM800_TX_PIN 11
 #define SIM800_RX_PIN 10
+#define SIM800_TX_PIN 11
 #define SIM800_RST_PIN 6
 
 const char APN[] = "Internet.be";
@@ -45,7 +45,7 @@ void setup() {
   while(!Serial);
 
   // Initialize a SoftwareSerial
-  SoftwareSerial* serial = new SoftwareSerial(SIM800_TX_PIN, SIM800_RX_PIN);
+  SoftwareSerial* serial = new SoftwareSerial(SIM800_RX_PIN, SIM800_TX_PIN);
   serial->begin(9600);
   delay(1000);
    
