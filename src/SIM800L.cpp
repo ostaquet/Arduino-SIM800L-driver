@@ -54,6 +54,7 @@ const char AT_CMD_SAPBR0[] PROGMEM = "AT+SAPBR=0,1";                          //
 const char AT_CMD_HTTPINIT[] PROGMEM = "AT+HTTPINIT";                         // Init HTTP connection
 const char AT_CMD_HTTPPARA_CID[] PROGMEM = "AT+HTTPPARA=\"CID\",1";           // Connect HTTP through GPRS bearer
 const char AT_CMD_HTTPPARA_URL[] PROGMEM = "AT+HTTPPARA=\"URL\",";            // Define the URL to connect in HTTP
+const char AT_CMD_HTTPPARA_USERDATA[] PROGMEM = "AT+HTTPPARA=\"USERDATA\",";  // Define the header(s)
 const char AT_CMD_HTTPPARA_CONTENT[] PROGMEM = "AT+HTTPPARA=\"CONTENT\",";    // Define the content type for the HTTP POST
 const char AT_CMD_HTTPSSL_Y[] PROGMEM = "AT+HTTPSSL=1";                       // Enable SSL for HTTP connection
 const char AT_CMD_HTTPSSL_N[] PROGMEM = "AT+HTTPSSL=0";                       // Disable SSL for HTTP connection
@@ -111,12 +112,19 @@ SIM800L::~SIM800L() {
  * Do HTTP/S POST to a specific URL
  */
 uint16_t SIM800L::doPost(const char* url, const char* contentType, const char* payload, uint16_t clientWriteTimeoutMs, uint16_t serverReadTimeoutMs) {
+  return doPost(url, NULL, contentType, payload, clientWriteTimeoutMs , serverReadTimeoutMs);
+}
+
+/**
+ * Do HTTP/S POST to a specific URL with headers
+ */
+uint16_t SIM800L::doPost(const char* url, const char* headers, const char* contentType, const char* payload, uint16_t clientWriteTimeoutMs, uint16_t serverReadTimeoutMs) {
   // Cleanup the receive buffer
   initRecvBuffer();
   dataSize = 0;
 
   // Initiate HTTP/S session with the module
-  uint16_t initRC = initiateHTTP(url);
+  uint16_t initRC = initiateHTTP(url, headers);
   if(initRC > 0) {
     return initRC;
   }
@@ -247,12 +255,19 @@ uint16_t SIM800L::doPost(const char* url, const char* contentType, const char* p
  * Do HTTP/S GET on a specific URL
  */
 uint16_t SIM800L::doGet(const char* url, uint16_t serverReadTimeoutMs) {
+  return doGet(url, NULL, serverReadTimeoutMs);
+}
+
+/**
+ * Do HTTP/S GET on a specific URL with headers
+ */
+uint16_t SIM800L::doGet(const char* url, const char* headers, uint16_t serverReadTimeoutMs) {
   // Cleanup the receive buffer
   initRecvBuffer();
   dataSize = 0;
   
   // Initiate HTTP/S session
-  uint16_t initRC = initiateHTTP(url);
+  uint16_t initRC = initiateHTTP(url, headers);
   if(initRC > 0) {
     return initRC;
   }
@@ -354,7 +369,7 @@ uint16_t SIM800L::doGet(const char* url, uint16_t serverReadTimeoutMs) {
 /**
  * Meta method to initiate the HTTP/S session on the module
  */
-uint16_t SIM800L::initiateHTTP(const char* url) {
+uint16_t SIM800L::initiateHTTP(const char* url, const char* headers) {
   // Init HTTP connection
   sendCommand_P(AT_CMD_HTTPINIT);
   if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
@@ -376,13 +391,22 @@ uint16_t SIM800L::initiateHTTP(const char* url) {
     return 702;
   }
 
+  // Set Headers
+  if (headers != NULL) {
+    sendCommand_P(AT_CMD_HTTPPARA_USERDATA, headers);
+    if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
+      if(enableDebug) debugStream->println(F("SIM800L : initiateHTTP() - Unable to define Headers"));
+      return 702;
+    }
+  }
+
   // Check if the firmware support HTTPSSL command
   bool isSupportSSL = false;
   char* version = getVersion();
   int16_t rIdx = strIndex(version, "R");
   if(rIdx > 0) {
     uint8_t releaseInt = (version[rIdx + 1] - '0') * 10 + (version[rIdx + 2] - '0');
-    
+
     // The release should be greater or equals to 14 to support SSL stack
     if(releaseInt >= 14) {
       isSupportSSL = true;
