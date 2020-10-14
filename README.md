@@ -88,11 +88,15 @@ In order to make an HTTP GET connection to a server or the [Postman Echo service
 ```
 sim800l->doGet("https://postman-echo.com/get?foo1=bar1&foo2=bar2", 10000);
 ```
+or
+```
+sim800l->doGet("https://postman-echo.com/get?foo1=bar1&foo2=bar2", "Header-1:value1\\r\\nHeader-2:value2", 10000);
+```
 If the method returns 200 (HTTP status code for OK), you can obtain the size of the data received.
 ```
 sim800l->getDataSizeReceived();
 ```
-And you can obtain the data recieved through a char array.
+And you can obtain the data received through a char array.
 ```
 sim800l->getDataReceived();
 ```
@@ -102,12 +106,17 @@ In order to make an HTTP POST connection to a server or the [Postman Echo servic
 
 The arguments of the method are:
  * The URL (*https://postman-echo.com/post*)
+ * *(optional)* Headers *("Header-1:value1\\r\\nHeader-2:value2")*
  * The content type (*application/json*)
  * The content to POST (*{"name": "morpheus", "job": "leader"}*)
  * The write timeout while writing data to the server (*10000* ms)
  * The read timeout while reading data from the server (*10000* ms)
 ```
 sim800l->doPost("https://postman-echo.com/post", "application/json", "{\"name\": \"morpheus\", \"job\": \"leader\"}", 10000, 10000);
+```
+or with headers
+```
+sim800l->doPost("https://postman-echo.com/post", "Header-1:value1\\r\\nHeader-2:value2", "application/json", "{\"name\": \"morpheus\", \"job\": \"leader\"}", 10000, 10000);
 ```
 If the method returns 200 (HTTP status code for OK), you can obtain the size of the data received.
 ```
