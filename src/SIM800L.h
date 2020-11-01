@@ -73,7 +73,9 @@ class SIM800L {
 
     // HTTP methods
     uint16_t doGet(const char* url, uint16_t serverReadTimeoutMs);
+    uint16_t doGet(const char* url, const char* headers, uint16_t serverReadTimeoutMs);
     uint16_t doPost(const char* url, const char* contentType, const char* payload, uint16_t clientWriteTimeoutMs, uint16_t serverReadTimeoutMs);
+    uint16_t doPost(const char* url, const char* headers, const char* contentType, const char* payload, uint16_t clientWriteTimeoutMs, uint16_t serverReadTimeoutMs);
 
     // Obtain results after HTTP successful connections (size and buffer)
     uint8_t getDataSizeReceived();
@@ -105,7 +107,7 @@ class SIM800L {
     void initRecvBuffer();
 
     // Initiate HTTP/S connection
-    uint16_t initiateHTTP(const char* url);
+    uint16_t initiateHTTP(const char* url, const char* headers);
     uint16_t terminateHTTP();
 
   private:
