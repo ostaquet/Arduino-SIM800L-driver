@@ -78,7 +78,7 @@ class SIM800L {
     uint16_t doPost(const char* url, const char* headers, const char* contentType, const char* payload, uint16_t clientWriteTimeoutMs, uint16_t serverReadTimeoutMs);
 
     // Obtain results after HTTP successful connections (size and buffer)
-    uint8_t getDataSizeReceived();
+    uint16_t getDataSizeReceived();
     char* getDataReceived();
 
   protected:
