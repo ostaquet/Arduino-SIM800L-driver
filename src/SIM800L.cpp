@@ -476,7 +476,7 @@ void SIM800L::reset() {
 /**
  * Return the size of data received after the last successful HTTP connection
  */
-uint8_t SIM800L::getDataSizeReceived() {
+uint16_t SIM800L::getDataSizeReceived() {
   return dataSize;
 }
 
