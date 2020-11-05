@@ -78,9 +78,12 @@ SIM800L::SIM800L(Stream* _stream, uint8_t _pinRst, uint16_t _internalBufferSize,
   debugStream = _debugStream;
   pinReset = _pinRst;
 
-  // Setup the reset pin and force a reset of the module
-  pinMode(pinReset, OUTPUT);
-  reset();
+  if(pinReset != RESET_PIN_NOT_USED)
+  {
+    // Setup the reset pin and force a reset of the module  
+    pinMode(pinReset, OUTPUT);
+    reset();
+  }
 
   // Prepare internal buffers
   if(enableDebug) {
@@ -457,14 +460,17 @@ uint16_t SIM800L::terminateHTTP() {
 void SIM800L::reset() {
   if(enableDebug) debugStream->println(F("SIM800L : Reset"));
   
-  // Reset the device
-  digitalWrite(pinReset, HIGH);
-  delay(500);
-  digitalWrite(pinReset, LOW);
-  delay(500);
-  digitalWrite(pinReset, HIGH);
-  delay(1000);
-
+  if(pinReset != RESET_PIN_NOT_USED)
+  {
+    // Reset the device
+    digitalWrite(pinReset, HIGH);
+    delay(500);
+    digitalWrite(pinReset, LOW);
+    delay(500);
+    digitalWrite(pinReset, HIGH);
+    delay(1000);
+  }
+  
   // Purge the serial
   stream->flush();
   while (stream->available()) {

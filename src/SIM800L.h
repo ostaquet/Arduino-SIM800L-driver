@@ -34,6 +34,7 @@
 #include <Arduino.h>
 
 #define DEFAULT_TIMEOUT 5000
+#define RESET_PIN_NOT_USED -1
 
 enum PowerMode {MINIMUM, NORMAL, POW_UNKNOWN, SLEEP, POW_ERROR};
 enum NetworkRegistration {NOT_REGISTERED, REGISTERED_HOME, SEARCHING, DENIED, NET_UNKNOWN, REGISTERED_ROAMING, NET_ERROR};
@@ -48,7 +49,7 @@ class SIM800L {
     //                        (including URL and maximum payload to send through POST method)
     //  _recvBufferSize : size in bytes of the reception buffer (max data to receive from GET or POST)
     //  _debugStream : Stream opened to the debug console (Software of Hardware)
-    SIM800L(Stream* _stream, uint8_t _pinRst, uint16_t _internalBufferSize = 128, uint16_t _recvBufferSize = 256, Stream* _debugStream = NULL);
+    SIM800L(Stream* _stream, uint8_t _pinRst = RESET_PIN_NOT_USED, uint16_t _internalBufferSize = 128, uint16_t _recvBufferSize = 256, Stream* _debugStream = NULL);
     ~SIM800L();
 
     // Force a reset of the module
