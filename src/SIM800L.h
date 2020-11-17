@@ -16,10 +16,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -44,11 +44,11 @@ class SIM800L {
     // Initialize the driver
     // Parameters:
     //  _stream : Stream opened to the SIM800L module (Software or Hardware, usually 9600 bps)
-    //  _pinRst : pin to the reset of the SIM800L module
-    //  _internalBufferSize : size in bytes of the internal buffer to handle general IO with the module
+    //  _pinRst (optional) : pin to the reset of the SIM800L module
+    //  _internalBufferSize (optional): size in bytes of the internal buffer to handle general IO with the module
     //                        (including URL and maximum payload to send through POST method)
-    //  _recvBufferSize : size in bytes of the reception buffer (max data to receive from GET or POST)
-    //  _debugStream : Stream opened to the debug console (Software of Hardware)
+    //  _recvBufferSize (optional) : size in bytes of the reception buffer (max data to receive from GET or POST)
+    //  _debugStream (optional) : Stream opened to the debug console (Software of Hardware)
     SIM800L(Stream* _stream, uint8_t _pinRst = RESET_PIN_NOT_USED, uint16_t _internalBufferSize = 128, uint16_t _recvBufferSize = 256, Stream* _debugStream = NULL);
     ~SIM800L();
 
@@ -91,15 +91,15 @@ class SIM800L {
     void sendCommand(const char* command, const char* parameter);
     // Send command with parameter within quotes from PROGMEM (template : command"parameter")
     void sendCommand_P(const char* command, const char* parameter);
-    
+
     // Read from module (timeout in millisec)
     bool readResponse(uint16_t timeout, uint8_t crlfToWait = 2);
     // Read from module and expect a specific answer defined in PROGMEM (timeout in millisec)
     bool readResponseCheckAnswer_P(uint16_t timeout, const char* expectedAnswer, uint8_t crlfToWait = 2);
-    
+
     // Purge the serial
     void purgeSerial();
-    
+
     // Find string in another string
     int16_t strIndex(const char* str, const char* findStr, uint16_t startIdx = 0);
 
