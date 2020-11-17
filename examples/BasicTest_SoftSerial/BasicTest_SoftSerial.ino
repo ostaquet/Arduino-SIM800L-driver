@@ -14,10 +14,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,7 +36,7 @@
 
 SIM800L* sim800l;
 
-void setup() {  
+void setup() {
   // Initialize Serial Monitor for debugging
   Serial.begin(115200);
   while(!Serial);
@@ -45,7 +45,7 @@ void setup() {
   SoftwareSerial* serial = new SoftwareSerial(SIM800_RX_PIN, SIM800_TX_PIN);
   serial->begin(9600);
   delay(1000);
-   
+
   // Initialize SIM800L driver with an internal buffer of 200 bytes and a reception buffer of 512 bytes, debug disabled
   sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512);
 
@@ -98,7 +98,7 @@ void setup() {
 
   Serial.println("End of test protocol");
 }
- 
+
 void loop() {
-  
+
 }

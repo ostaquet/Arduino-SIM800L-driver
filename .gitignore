@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Compiled arduino
+*.eep
+*.elf
+*.hex
+*.bin
