@@ -16,10 +16,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -78,9 +78,11 @@ SIM800L::SIM800L(Stream* _stream, uint8_t _pinRst, uint16_t _internalBufferSize,
   debugStream = _debugStream;
   pinReset = _pinRst;
 
-  // Setup the reset pin and force a reset of the module
-  pinMode(pinReset, OUTPUT);
-  reset();
+  if(pinReset != RESET_PIN_NOT_USED) {
+    // Setup the reset pin and force a reset of the module
+    pinMode(pinReset, OUTPUT);
+    reset();
+  }
 
   // Prepare internal buffers
   if(enableDebug) {
@@ -90,7 +92,7 @@ SIM800L::SIM800L(Stream* _stream, uint8_t _pinRst, uint16_t _internalBufferSize,
   }
   internalBufferSize = _internalBufferSize;
   internalBuffer = (char*) malloc(internalBufferSize);
-  
+
   if(enableDebug) {
     debugStream->print(F("SIM800L : Prepare reception buffer of "));
     debugStream->print(_recvBufferSize);
@@ -151,7 +153,7 @@ uint16_t SIM800L::doPost(const char* url, const char* headers, const char* conte
     debugStream->print(F("SIM800L : doPost() - Payload to send : "));
     debugStream->println(payload);
   }
-  
+
   purgeSerial();
   stream->write(payload);
   stream->flush();
@@ -197,19 +199,19 @@ uint16_t SIM800L::doPost(const char* url, const char* headers, const char* conte
       }
       dataSize += (internalBuffer[idxBase + 19 + i] - '0');
     }
-  
+
     if(enableDebug) {
       debugStream->print(F("SIM800L : doPost() - Data size received of "));
       debugStream->print(dataSize);
       debugStream->println(F(" bytes"));
     }
-  
+
     // Ask for reading and detect the start of the reading...
     sendCommand_P(AT_CMD_HTTPREAD);
     if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_HTTPREAD, 2)) {
       return 705;
     }
-  
+
     // Read number of bytes defined in the dataSize
     for(uint16_t i = 0; i < dataSize && i < recvBufferSize; i++) {
       while(!stream->available());
@@ -222,20 +224,20 @@ uint16_t SIM800L::doPost(const char* url, const char* headers, const char* conte
         }
       }
     }
-  
+
     if(recvBufferSize < dataSize) {
       dataSize = recvBufferSize;
       if(enableDebug) {
         debugStream->println(F("SIM800L : doPost() - Buffer overflow while loading data from HTTP. Keep only first bytes..."));
       }
     }
-  
+
     // We are expecting a final OK
     if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
       if(enableDebug) debugStream->println(F("SIM800L : doPost() - Invalid end of data while reading HTTP result from the module"));
       return 705;
     }
-  
+
     if(enableDebug) {
       debugStream->print(F("SIM800L : doPost() - Received from HTTP POST : "));
       debugStream->println(recvBuffer);
@@ -265,7 +267,7 @@ uint16_t SIM800L::doGet(const char* url, const char* headers, uint16_t serverRea
   // Cleanup the receive buffer
   initRecvBuffer();
   dataSize = 0;
-  
+
   // Initiate HTTP/S session
   uint16_t initRC = initiateHTTP(url, headers);
   if(initRC > 0) {
@@ -312,19 +314,19 @@ uint16_t SIM800L::doGet(const char* url, const char* headers, uint16_t serverRea
       }
       dataSize += (internalBuffer[idxBase + 19 + i] - '0');
     }
-  
+
     if(enableDebug) {
       debugStream->print(F("SIM800L : doGet() - Data size received of "));
       debugStream->print(dataSize);
       debugStream->println(F(" bytes"));
     }
-  
+
     // Ask for reading and detect the start of the reading...
     sendCommand_P(AT_CMD_HTTPREAD);
     if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_HTTPREAD, 2)) {
       return 705;
     }
-  
+
     // Read number of bytes defined in the dataSize
     for(uint16_t i = 0; i < dataSize && i < recvBufferSize; i++) {
       while(!stream->available());
@@ -337,20 +339,20 @@ uint16_t SIM800L::doGet(const char* url, const char* headers, uint16_t serverRea
         }
       }
     }
-  
+
     if(recvBufferSize < dataSize) {
       dataSize = recvBufferSize;
       if(enableDebug) {
         debugStream->println(F("SIM800L : doGet() - Buffer overflow while loading data from HTTP. Keep only first bytes..."));
       }
     }
-  
+
     // We are expecting a final OK
     if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
       if(enableDebug) debugStream->println(F("SIM800L : doGet() - Invalid end of data while reading HTTP result from the module"));
       return 705;
     }
-  
+
     if(enableDebug) {
       debugStream->print(F("SIM800L : doGet() - Received from HTTP GET : "));
       debugStream->println(recvBuffer);
@@ -376,7 +378,7 @@ uint16_t SIM800L::initiateHTTP(const char* url, const char* headers) {
     if(enableDebug) debugStream->println(F("SIM800L : initiateHTTP() - Unable to init HTTP"));
     return 701;
   }
-  
+
   // Use the GPRS bearer
   sendCommand_P(AT_CMD_HTTPPARA_CID);
   if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
@@ -455,22 +457,29 @@ uint16_t SIM800L::terminateHTTP() {
  * Force a reset of the module
  */
 void SIM800L::reset() {
-  if(enableDebug) debugStream->println(F("SIM800L : Reset"));
-  
-  // Reset the device
-  digitalWrite(pinReset, HIGH);
-  delay(500);
-  digitalWrite(pinReset, LOW);
-  delay(500);
-  digitalWrite(pinReset, HIGH);
-  delay(1000);
+  if(pinReset != RESET_PIN_NOT_USED)
+  {
+    // Some logging
+    if(enableDebug) debugStream->println(F("SIM800L : Reset"));
+
+    // Reset the device
+    digitalWrite(pinReset, HIGH);
+    delay(500);
+    digitalWrite(pinReset, LOW);
+    delay(500);
+    digitalWrite(pinReset, HIGH);
+    delay(1000);
+  } else {
+    // Some logging
+    if(enableDebug) debugStream->println(F("SIM800L : Reset requested but reset pin undefined"));
+    if(enableDebug) debugStream->println(F("SIM800L : No reset"));
+  }
 
   // Purge the serial
   stream->flush();
   while (stream->available()) {
     stream->read();
   }
-  
 }
 
 /**
@@ -552,7 +561,7 @@ char* SIM800L::getFirmware() {
     // Extract the value
     int16_t idx = strIndex(internalBuffer, "AT+GMR") + 9;
     int16_t idxEnd = strIndex(internalBuffer, "\r", idx+1);
-    
+
     // Store it on the recv buffer (not used at the moment)
     initRecvBuffer();
     for(uint16_t i = 0; i < idxEnd - idx; i++) {
@@ -599,7 +608,7 @@ NetworkRegistration SIM800L::getRegistrationStatus() {
     // Extract the value
     int16_t idx = strIndex(internalBuffer, "+CREG: ");
     char value = internalBuffer[idx + 9];
-  
+
     // Prepare the clear output
     switch(value) {
       case '0' : return NOT_REGISTERED;
@@ -610,7 +619,7 @@ NetworkRegistration SIM800L::getRegistrationStatus() {
       default  : return NET_UNKNOWN;
     }
   }
-  
+
   return NET_ERROR;
 }
 
@@ -659,7 +668,7 @@ bool SIM800L::setPowerMode(PowerMode powerMode) {
   if(powerMode == POW_ERROR || powerMode == POW_UNKNOWN) {
     return false;
   }
-  
+
   // Check the current power mode
   PowerMode currentPowerMode = getPowerMode();
 
@@ -672,7 +681,7 @@ bool SIM800L::setPowerMode(PowerMode powerMode) {
   if(currentPowerMode == powerMode) {
     return true;
   }
-  
+
   // If SLEEP or MINIMUM, only NORMAL is allowed
   if((currentPowerMode == SLEEP || currentPowerMode == MINIMUM) && (powerMode != NORMAL)) {
     return false;
@@ -681,7 +690,7 @@ bool SIM800L::setPowerMode(PowerMode powerMode) {
   // Send the command
   char value;
   switch(powerMode) {
-    case MINIMUM : 
+    case MINIMUM :
       sendCommand_P(AT_CMD_CFUN0);
       break;
     case SLEEP :
@@ -697,7 +706,7 @@ bool SIM800L::setPowerMode(PowerMode powerMode) {
 
   // Check the current power mode
   currentPowerMode = getPowerMode();
-  
+
   // If the current power mode is the same that the requested power mode, say it's OK
   return currentPowerMode == powerMode;
 }
@@ -788,7 +797,7 @@ void SIM800L::sendCommand(const char* command) {
     debugStream->print(command);
     debugStream->println(F("\""));
   }
-  
+
   purgeSerial();
   stream->write(command);
   stream->write("\r\n");
@@ -816,7 +825,7 @@ void SIM800L::sendCommand(const char* command, const char* parameter) {
     debugStream->print(F("\""));
     debugStream->println(F("\""));
   }
-  
+
   purgeSerial();
   stream->write(command);
   stream->write("\"");
@@ -854,7 +863,7 @@ bool SIM800L::readResponseCheckAnswer_P(uint16_t timeout, const char* expectedAn
     // Prepare the local expected answer
     char rspBuff[16];
     strcpy_P(rspBuff, expectedAnswer);
-    
+
     // Check if it's the expected answer
     int16_t idx = strIndex(internalBuffer, rspBuff);
     if(idx > 0) {
@@ -875,7 +884,7 @@ bool SIM800L::readResponse(uint16_t timeout, uint8_t crlfToWait) {
 
   // First of all, cleanup the buffer
   initInternalBuffer();
-  
+
   uint32_t timerStart = millis();
 
   while(1) {
