@@ -48,6 +48,8 @@ const char AT_CMD_CFUN4[] PROGMEM = "AT+CFUN=4";                              //
 const char AT_CMD_CREG_TEST[] PROGMEM = "AT+CREG?";                           // Check the network registration status
 const char AT_CMD_SAPBR_GPRS[] PROGMEM = "AT+SAPBR=3,1,\"Contype\",\"GPRS\""; // Configure the GPRS bearer
 const char AT_CMD_SAPBR_APN[] PROGMEM = "AT+SAPBR=3,1,\"APN\",";              // Configure the APN for the GPRS
+const char AT_CMD_SAPBR_USER[] PROGMEM = "AT+SAPBR=3,1,\"USER\",";            // Configure the USER for the GPRS (linked to APN)
+const char AT_CMD_SAPBR_PWD[] PROGMEM = "AT+SAPBR=3,1,\"PWD\",";              // Configure the PWD for the GPRS (linked to APN)
 const char AT_CMD_SAPBR1[] PROGMEM = "AT+SAPBR=1,1";                          // Connect GPRS
 const char AT_CMD_SAPBR0[] PROGMEM = "AT+SAPBR=0,1";                          // Disconnect GPRS
 
@@ -636,6 +638,34 @@ bool SIM800L::setupGPRS(const char* apn) {
 
   // Set the config of the bearer with the APN
   sendCommand_P(AT_CMD_SAPBR_APN, apn);
+  return readResponseCheckAnswer_P(20000, AT_RSP_OK);
+}
+
+/**
+ * Setup the GPRS connectivity with user and password
+ * As input, give the APN string of the operator, the user and the password
+ */
+bool SIM800L::setupGPRS(const char* apn, const char* user, const char* password) {
+  // Prepare the GPRS connection as the bearer
+  sendCommand_P(AT_CMD_SAPBR_GPRS);
+  if(!readResponseCheckAnswer_P(20000, AT_RSP_OK)) {
+    return false;
+  }
+
+  // Set the config of the bearer with the APN
+  sendCommand_P(AT_CMD_SAPBR_APN, apn);
+  if(!readResponseCheckAnswer_P(20000, AT_RSP_OK)) {
+    return false;
+  }
+
+  // Set the config of the bearer with the USER
+  sendCommand_P(AT_CMD_SAPBR_USER, user);
+  if(!readResponseCheckAnswer_P(20000, AT_RSP_OK)) {
+    return false;
+  }
+
+  // Set the config of the bearer with the PWD
+  sendCommand_P(AT_CMD_SAPBR_PWD, password);
   return readResponseCheckAnswer_P(20000, AT_RSP_OK);
 }
 
