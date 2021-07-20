@@ -66,6 +66,10 @@ void setup() {
   Serial.print("Firmware ");
   Serial.println(sim800l->getFirmware());
 
+  // Print SIM card status
+  Serial.print(F("SIM status "));
+  Serial.println(sim800l->getSimStatus());
+
   // Print SIM card number
   Serial.print("SIM card number ");
   Serial.println(sim800l->getSimCardNumber());

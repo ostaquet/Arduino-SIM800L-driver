@@ -36,6 +36,9 @@
 const char AT_CMD_BASE[] PROGMEM = "AT";                                      // Basic AT command to check the link
 const char AT_CMD_ECHO[] PROGMEM = "ATE1&W";                                  // Set command echo mode
 
+const char AT_CMD_CPIN_TEST[] PROGMEM = "AT+CPIN?";                           // Check SIM card status
+const char AT_CMD_CPIN_PIN[] PROGMEM = "AT+CPIN=";                            // Configure PIN code
+
 const char AT_CMD_CSQ[] PROGMEM = "AT+CSQ";                                   // Check the signal strengh
 const char AT_CMD_ATI[] PROGMEM = "ATI";                                      // Output version of the module
 const char AT_CMD_GMR[] PROGMEM = "AT+GMR";                                   // Output version of the firmware
@@ -603,6 +606,32 @@ char* SIM800L::getSimCardNumber() {
     return getDataReceived();
   } else {
     return NULL;
+  }
+}
+
+/**
+ * Status function: Request the status of the SIM card
+ */
+char* SIM800L::getSimStatus() {
+  sendCommand_P(AT_CMD_CPIN_TEST);
+  if(readResponse(DEFAULT_TIMEOUT)) {
+    // Extract the value
+    int16_t idx = strIndex(internalBuffer, "+CPIN:");
+    if(idx > 0) {
+      idx = idx + 7;
+    } else {
+      return "ERROR";
+    }
+    int16_t idxEnd = strIndex(internalBuffer, "\r", idx+1);
+
+    // Store it on the recv buffer (not used at the moment)
+    initRecvBuffer();
+    for(uint16_t i = 0; i < idxEnd - idx; i++) {
+      recvBuffer[i] = internalBuffer[idx + i];
+    }
+    return getDataReceived();
+  } else {
+    return "ERROR";
   }
 }
 
