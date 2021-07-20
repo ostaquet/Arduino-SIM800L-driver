@@ -63,6 +63,7 @@ class SIM800L {
     char* getVersion();
     char* getFirmware();
     char* getSimCardNumber();
+    char* getIP();
 
     // Troubleshooting functions: enable echo mode
     bool enableEchoMode();

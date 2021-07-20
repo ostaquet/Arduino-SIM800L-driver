@@ -607,6 +607,31 @@ char* SIM800L::getSimCardNumber() {
 }
 
 /**
+ * Status function: Requests the IP of the GPRS connection
+ */
+char* SIM800L::getIP() {
+  sendCommand_P(AT_CMD_SAPBR2);
+  if(readResponse(DEFAULT_TIMEOUT)) {
+    int16_t idx = strIndex(internalBuffer, "+SAPBR: 1,1");
+    if(idx > 0) {
+      idx = idx + 13;
+    } else {
+      return "Not connected";
+    }
+    int16_t idxEnd = strIndex(internalBuffer, "\"", idx+1);
+
+    // Store it on the recv buffer (not used at the moment)
+    initRecvBuffer();
+    for(uint16_t i = 0; i < idxEnd - idx; i++) {
+      recvBuffer[i] = internalBuffer[idx + i];
+    }
+    return getDataReceived();
+  } else {
+    return "Not connected";
+  }
+}
+
+/**
  * Status function: Check if the module is registered on the network
  */
 NetworkRegistration SIM800L::getRegistrationStatus() {

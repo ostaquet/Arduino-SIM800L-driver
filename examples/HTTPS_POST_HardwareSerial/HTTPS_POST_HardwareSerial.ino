@@ -66,7 +66,8 @@ void loop() {
 
   // Check if connected, if not reset the module and setup the config again
   if(connected) {
-    Serial.println(F("GPRS connected !"));
+    Serial.print(F("GPRS connected with IP "));
+    Serial.println(sim800l->getIP());
   } else {
     Serial.println(F("GPRS not connected !"));
     Serial.println(F("Reset the module."));

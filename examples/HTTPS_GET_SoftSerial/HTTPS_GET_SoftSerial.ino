@@ -53,7 +53,7 @@ void setup() {
   sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512);
 
   // Equivalent line with the debug enabled on the Serial
-  //sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512, (Stream *)&Serial);
+  // sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512, (Stream *)&Serial);
 
   // Setup module for GPRS communication
   setupModule();
@@ -69,7 +69,8 @@ void loop() {
 
   // Check if connected, if not reset the module and setup the config again
   if(connected) {
-    Serial.println(F("GPRS connected !"));
+    Serial.print(F("GPRS connected with IP "));
+    Serial.println(sim800l->getIP());
   } else {
     Serial.println(F("GPRS not connected !"));
     Serial.println(F("Reset the module."));
