@@ -34,11 +34,12 @@
  * AT commands required (const char in PROGMEM to save memory usage)
  */
 const char AT_CMD_BASE[] PROGMEM = "AT";                                      // Basic AT command to check the link
+const char AT_CMD_ECHO[] PROGMEM = "ATE1&W";                                  // Set command echo mode
 
 const char AT_CMD_CSQ[] PROGMEM = "AT+CSQ";                                   // Check the signal strengh
 const char AT_CMD_ATI[] PROGMEM = "ATI";                                      // Output version of the module
 const char AT_CMD_GMR[] PROGMEM = "AT+GMR";                                   // Output version of the firmware
-const char AT_CMD_SIM_CARD[] PROGMEM = "AT+CCID";						      // Get Sim Card version
+const char AT_CMD_SIM_CARD[] PROGMEM = "AT+CCID";						                  // Get Sim Card version
 
 const char AT_CMD_CFUN_TEST[] PROGMEM = "AT+CFUN?";                           // Check the current power mode
 const char AT_CMD_CFUN0[] PROGMEM = "AT+CFUN=0";                              // Switch minimum power mode
@@ -503,6 +504,14 @@ char* SIM800L::getDataReceived() {
  */
 bool SIM800L::isReady() {
   sendCommand_P(AT_CMD_BASE);
+  return readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK);
+}
+
+/**
+ * Config function: Enable commande echo mode
+ */
+bool SIM800L::enableEchoMode() {
+  sendCommand_P(AT_CMD_ECHO);
   return readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK);
 }
 

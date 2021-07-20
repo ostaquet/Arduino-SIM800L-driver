@@ -55,7 +55,7 @@ void setup() {
   sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512);
 
   // Equivalent line with the debug enabled on the Serial
-  // sim800l = new SIM800L((Stream *)&Serial1, SIM800_RST_PIN, 200, 512, (Stream *)&Serial);
+  // sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512, (Stream *)&Serial);
 
   // Setup module for GPRS communication
   setupModule();
@@ -128,6 +128,7 @@ void setupModule() {
     Serial.println(F("Problem to initialize AT command, retry in 1 sec"));
     delay(1000);
   }
+  
   Serial.println(F("Setup Complete!"));
 
   // Wait for the GSM signal

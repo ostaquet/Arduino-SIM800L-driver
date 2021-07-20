@@ -64,6 +64,9 @@ class SIM800L {
     char* getFirmware();
     char* getSimCardNumber();
 
+    // Troubleshooting functions: enable echo mode
+    bool enableEchoMode();
+
     // Define the power mode (for parameter: see PowerMode enum)
     bool setPowerMode(PowerMode powerMode);
 

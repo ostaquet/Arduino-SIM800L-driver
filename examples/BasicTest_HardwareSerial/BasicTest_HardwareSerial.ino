@@ -55,6 +55,9 @@ void setup() {
     delay(1000);
   }
 
+  // Active echo mode (for some module, it is required)
+  sim800l->enableEchoMode();
+
   Serial.println("Module ready");
 
   // Print version
