@@ -69,6 +69,9 @@ class SIM800L {
     // Troubleshooting functions: enable echo mode
     bool enableEchoMode();
 
+    // Define PIN code to activate SIM card
+    bool setPinCode(const char *pin);
+
     // Define the power mode (for parameter: see PowerMode enum)
     bool setPowerMode(PowerMode powerMode);
 

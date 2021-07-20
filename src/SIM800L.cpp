@@ -691,6 +691,15 @@ NetworkRegistration SIM800L::getRegistrationStatus() {
 }
 
 /**
+ * Define PIN code to activate SIM card
+ */
+bool SIM800L::setPinCode(const char *pin) {
+  // Set the PIN code to activate the SIM card
+  sendCommand_P(AT_CMD_CPIN_PIN, pin);
+  return readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK);
+}
+
+/**
  * Setup the GPRS connectivity
  * As input, give the APN string of the operator
  */
