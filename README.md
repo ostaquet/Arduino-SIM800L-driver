@@ -12,8 +12,8 @@ The [SIM800L](https://simcom.ee/modules/gsm-gprs/sim800/) is a GSM/GPRS module b
 Supported features in this library:
  * Power management of the SIM800L module
  * Network registration and signal strengh measurement
- * GPRS connectivity and setup
- * HTTP and HTTPS (SSL based on in-built IP stack)
+ * GPRS connectivity and setup (APN with or without username and password)
+ * HTTP and HTTPS (SSL based on in-built IP stack, see [Security concerns](https://github.com/ostaquet/Arduino-SIM800L-driver#security-concerns))
  * GET and POST methods
  * SoftwareSerial and HardwareSerial links
  * Configurable debug serial
