@@ -52,6 +52,7 @@ const char AT_CMD_SAPBR_APN[] PROGMEM = "AT+SAPBR=3,1,\"APN\",";              //
 const char AT_CMD_SAPBR_USER[] PROGMEM = "AT+SAPBR=3,1,\"USER\",";            // Configure the USER for the GPRS (linked to APN)
 const char AT_CMD_SAPBR_PWD[] PROGMEM = "AT+SAPBR=3,1,\"PWD\",";              // Configure the PWD for the GPRS (linked to APN)
 const char AT_CMD_SAPBR1[] PROGMEM = "AT+SAPBR=1,1";                          // Connect GPRS
+const char AT_CMD_SAPBR2[] PROGMEM = "AT+SAPBR=2,1";                          // Check GPRS connection status
 const char AT_CMD_SAPBR0[] PROGMEM = "AT+SAPBR=0,1";                          // Disconnect GPRS
 
 const char AT_CMD_HTTPINIT[] PROGMEM = "AT+HTTPINIT";                         // Init HTTP connection
@@ -69,6 +70,7 @@ const char AT_CMD_HTTPTERM[] PROGMEM = "AT+HTTPTERM";                         //
 const char AT_RSP_OK[] PROGMEM = "OK";                                        // Expected answer OK
 const char AT_RSP_DOWNLOAD[] PROGMEM = "DOWNLOAD";                            // Expected answer DOWNLOAD
 const char AT_RSP_HTTPREAD[] PROGMEM = "+HTTPREAD: ";                         // Expected answer HTTPREAD
+const char AT_RSP_SAPBR[] PROGMEM = "+SAPBR: 1,1";                            // Expected answer SAPBR: 1,1
 
 /**
  * Constructor; Init the driver, communication with the module and shared
@@ -686,6 +688,14 @@ bool SIM800L::connectGPRS() {
   // Timout is max 85 seconds according to SIM800 specifications
   // We will wait for 65s to be within uint16_t
   return readResponseCheckAnswer_P(65000, AT_RSP_OK);
+}
+
+/**
+ * Check if GPRS is connected
+ */
+bool SIM800L::isConnectedGPRS() {
+  sendCommand_P(AT_CMD_SAPBR2);
+  return readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_SAPBR);
 }
 
 /**

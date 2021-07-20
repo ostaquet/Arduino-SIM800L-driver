@@ -74,6 +74,7 @@ class SIM800L {
     bool setupGPRS(const char *apn);
     bool setupGPRS(const char *apn, const char *user, const char *password);
     bool connectGPRS();
+    bool isConnectedGPRS();
     bool disconnectGPRS();
 
     // HTTP methods
