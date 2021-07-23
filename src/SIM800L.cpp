@@ -148,10 +148,8 @@ uint16_t SIM800L::doPost(const char* url, const char* headers, const char* conte
   }
 
   // Prepare to send the payload
-  char* tmpBuf = (char*)malloc(30);
-  sprintf(tmpBuf, "AT+HTTPDATA=%d,%d", strlen(payload), clientWriteTimeoutMs);
-  sendCommand(tmpBuf);
-  free(tmpBuf);
+  sprintf(internalBuffer, "AT+HTTPDATA=%d,%d", strlen(payload), clientWriteTimeoutMs);
+  sendCommand(internalBuffer);
   if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_DOWNLOAD)) {
     if(enableDebug) debugStream->println(F("SIM800L : doPost() - Unable to send payload to module"));
     return 707;
