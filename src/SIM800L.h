@@ -117,9 +117,9 @@ class SIM800L {
     void initInternalBuffer();
     void initRecvBuffer();
 
-    // Initiate HTTP/S connection
+    // Manage HTTP/S connection
     uint16_t initiateHTTP(const char* url, const char* headers);
-    uint16_t terminateHTTP();
+    uint16_t readHTTP(uint16_t serverReadTimeoutMs);
 
   private:
     // Serial line with SIM800L
