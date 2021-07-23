@@ -63,6 +63,7 @@ const char AT_CMD_HTTPPARA_CID[] PROGMEM = "AT+HTTPPARA=\"CID\",1";           //
 const char AT_CMD_HTTPPARA_URL[] PROGMEM = "AT+HTTPPARA=\"URL\",";            // Define the URL to connect in HTTP
 const char AT_CMD_HTTPPARA_USERDATA[] PROGMEM = "AT+HTTPPARA=\"USERDATA\",";  // Define the header(s)
 const char AT_CMD_HTTPPARA_CONTENT[] PROGMEM = "AT+HTTPPARA=\"CONTENT\",";    // Define the content type for the HTTP POST
+const char AT_CMD_HTTPPARA_REDIR[] PROGMEM = "AT+HTTPPARA=\"REDIR\",1";       // Enable HTTP redirection
 const char AT_CMD_HTTPSSL_Y[] PROGMEM = "AT+HTTPSSL=1";                       // Enable SSL for HTTP connection
 const char AT_CMD_HTTPSSL_N[] PROGMEM = "AT+HTTPSSL=0";                       // Disable SSL for HTTP connection
 const char AT_CMD_HTTPACTION0[] PROGMEM = "AT+HTTPACTION=0";                  // Launch HTTP GET action
@@ -408,6 +409,13 @@ uint16_t SIM800L::initiateHTTP(const char* url, const char* headers) {
       if(enableDebug) debugStream->println(F("SIM800L : initiateHTTP() - Unable to define Headers"));
       return 702;
     }
+  }
+
+  // Enable HTTP redirection if HTTP RC 302
+  sendCommand_P(AT_CMD_HTTPPARA_REDIR);
+  if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
+    if(enableDebug) debugStream->println(F("SIM800L : initiateHTTP() - Unable to enable HTTP redirection"));
+    return 702;
   }
 
   // Check if the firmware support HTTPSSL command
