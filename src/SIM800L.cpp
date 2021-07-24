@@ -130,10 +130,6 @@ uint16_t SIM800L::doPost(const char* url, const char* contentType, const char* p
  * Do HTTP/S POST to a specific URL with headers
  */
 uint16_t SIM800L::doPost(const char* url, const char* headers, const char* contentType, const char* payload, uint16_t clientWriteTimeoutMs, uint16_t serverReadTimeoutMs) {
-  // Cleanup the receive buffer
-  initRecvBuffer();
-  dataSize = 0;
-
   // Initiate HTTP/S session with the module
   uint16_t initRC = initiateHTTP(url, headers);
   if(initRC > 0) {
@@ -188,10 +184,6 @@ uint16_t SIM800L::doGet(const char* url, uint16_t serverReadTimeoutMs) {
  * Do HTTP/S GET on a specific URL with headers
  */
 uint16_t SIM800L::doGet(const char* url, const char* headers, uint16_t serverReadTimeoutMs) {
-  // Cleanup the receive buffer
-  initRecvBuffer();
-  dataSize = 0;
-
   // Initiate HTTP/S session
   uint16_t initRC = initiateHTTP(url, headers);
   if(initRC > 0) {
@@ -213,6 +205,10 @@ uint16_t SIM800L::doGet(const char* url, const char* headers, uint16_t serverRea
  * Meta method to read the HTTP/S results on the module
  */
 uint16_t SIM800L::readHTTP(uint16_t serverReadTimeoutMs) {
+  // Cleanup the receive buffer
+  initRecvBuffer();
+  dataSize = 0;
+  
   // Wait answer from the server
   if(!readResponse(serverReadTimeoutMs)) {
     if(enableDebug) debugStream->println(F("SIM800L : readHTTP() - Server timeout"));
@@ -259,17 +255,17 @@ uint16_t SIM800L::readHTTP(uint16_t serverReadTimeoutMs) {
       return 705;
     }
 
-    // Read number of bytes defined in the dataSize
-    for(uint16_t i = 0; i < dataSize && i < recvBufferSize; i++) {
-      while(!stream->available());
-      if(stream->available()) {
-        // Load the next char
-        recvBuffer[i] = stream->read();
-        // If the character is CR or LF, ignore it (it's probably part of the module communication schema)
-        if((recvBuffer[i] == '\r') || (recvBuffer[i] == '\n')) {
-          i--;
-        }
-      }
+    // Read the data and purge the serial if buffer is too small
+    if(dataSize < recvBufferSize - 1) {
+      stream->readBytes(recvBuffer, dataSize);
+    } else {
+      uint16_t toRead = dataSize;
+      size_t bytesRead = stream->readBytes(recvBuffer, recvBufferSize - 1);
+      toRead -= bytesRead;
+      while(toRead > 0) {
+        stream->read();
+        toRead -= 1;
+      }  
     }
 
     if(recvBufferSize < dataSize) {

@@ -98,6 +98,8 @@ void loop() {
     Serial.println(rc);
   }
 
+  delay(1000);
+
   // Close GPRS connectivity (5 trials)
   bool disconnected = sim800l->disconnectGPRS();
   for(uint8_t i = 0; i < 5 && !connected; i++) {
