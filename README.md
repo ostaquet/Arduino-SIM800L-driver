@@ -138,6 +138,8 @@ The SIM800L latest firmware update was in January 2016. It means that using the 
 
 The embedded IP stack of the SIM800L only supports SSL2, SSL3 and TLS 1.0. These cryptographic protocols are considered deprecated for most of web browsers and the connection will be denied by modern backend (i.e. AWS). This will typically lead to an error `605` or `606` when you establish an HTTPS connection.
 
+In order to check the cryptographic protocols offered by your server, you can use the free service [Test TLS](https://testtls.com). In order to use the SIM800L, your server must accept the supported protocol.
+
 In order to secure your connectivity to the backend, we strongly recommend using an up-to-date SSL library like [WolfSSL](https://www.wolfssl.com).
 
 ## Links
