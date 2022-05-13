@@ -576,6 +576,28 @@ char* SIM800L::getIP() {
 }
 
 /**
+ * Status function: Get Battery status
+ *
+ */
+char* SIM800L::getBatteryStatus() {
+  sendCommand_P(AT_CMD_SIM_BATTERY);
+  if(readResponse(DEFAULT_TIMEOUT)) {
+    // Extract the value
+    int16_t idx = strIndex(internalBuffer, "AT+CBC") + 9;
+    int16_t idxEnd = strIndex(internalBuffer, "\r", idx+1);
+
+    // Store it on the recv buffer (not used at the moment)
+    initRecvBuffer();
+    for(uint16_t i = 0; i < idxEnd - idx; i++) {
+      recvBuffer[i] = internalBuffer[idx + i];
+    }
+    return getDataReceived();
+  } else {
+    return NULL;
+  }
+}
+
+/**
  * Status function: Check if the module is registered on the network
  */
 NetworkRegistration SIM800L::getRegistrationStatus() {
