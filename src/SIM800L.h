@@ -49,7 +49,9 @@ class SIM800L {
     //                        (including URL and maximum payload to send through POST method)
     //  _recvBufferSize (optional) : size in bytes of the reception buffer (max data to receive from GET or POST)
     //  _debugStream (optional) : Stream opened to the debug console (Software of Hardware)
-    SIM800L(Stream* _stream, uint8_t _pinRst = RESET_PIN_NOT_USED, uint16_t _internalBufferSize = 128, uint16_t _recvBufferSize = 256, Stream* _debugStream = NULL);
+    //  _port (optional) : Define the port of HTTP proxy server
+    //  _ipProxy (optional) : The IP address of HTTP proxy server
+    SIM800L(Stream* _stream, uint8_t _pinRst = RESET_PIN_NOT_USED, uint16_t _internalBufferSize = 128, uint16_t _recvBufferSize = 256, Stream* _debugStream = NULL, const char* _port = "-9999", const char* _ipProxy = "0.0.0.0");
     ~SIM800L();
 
     // Force a reset of the module
@@ -143,6 +145,12 @@ class SIM800L {
 
     // Enable debug mode
     bool enableDebug = false;
+
+    // The port of HTTP proxy server
+    const char* port; 
+    
+    // The IP address of HTTP proxy server
+    const char* ipProxy;
 };
 
 #endif // _SIM800L_H_
