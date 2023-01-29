@@ -249,36 +249,43 @@ uint16_t SIM800L::readHTTP(uint16_t serverReadTimeoutMs) {
       debugStream->println(F(" bytes"));
     }
 
-    // Ask for reading and detect the start of the reading...
-    sendCommand_P(AT_CMD_HTTPREAD);
-    if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_HTTPREAD, 2)) {
-      return 705;
-    }
-
-    // Read the data and purge the serial if buffer is too small
-    if(dataSize < recvBufferSize - 1) {
-      stream->readBytes(recvBuffer, dataSize);
-    } else {
-      uint16_t toRead = dataSize;
-      size_t bytesRead = stream->readBytes(recvBuffer, recvBufferSize - 1);
-      toRead -= bytesRead;
-      while(toRead > 0) {
-        stream->read();
-        toRead -= 1;
-      }  
-    }
-
-    if(recvBufferSize < dataSize) {
-      dataSize = recvBufferSize;
+    if (dataSize==0){    
       if(enableDebug) {
-        debugStream->println(F("SIM800L : readHTTP() - Buffer overflow while loading data from HTTP. Keep only first bytes..."));
+        debugStream->print(F("SIM800L : readHTTP() - No data to be read. "));
+        debugStream->println(recvBuffer);
       }
-    }
+    } else {
+        // Ask for reading and detect the start of the reading...
+        sendCommand_P(AT_CMD_HTTPREAD);
+        if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_HTTPREAD, 2)) {
+          return 705;
+        }
+    
+        // Read the data and purge the serial if buffer is too small
+        if(dataSize < recvBufferSize - 1) {
+          stream->readBytes(recvBuffer, dataSize);
+        } else {
+          uint16_t toRead = dataSize;
+          size_t bytesRead = stream->readBytes(recvBuffer, recvBufferSize - 1);
+          toRead -= bytesRead;
+          while(toRead > 0) {
+            stream->read();
+            toRead -= 1;
+          }  
+        }
+    
+        if(recvBufferSize < dataSize) {
+          dataSize = recvBufferSize;
+          if(enableDebug) {
+            debugStream->println(F("SIM800L : readHTTP() - Buffer overflow while loading data from HTTP. Keep only first bytes..."));
+          }
+        }
 
-    // We are expecting a final OK
-    if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
-      if(enableDebug) debugStream->println(F("SIM800L : readHTTP() - Invalid end of data while reading HTTP result from the module"));
-      return 705;
+        // We are expecting a final OK
+        if(!readResponseCheckAnswer_P(DEFAULT_TIMEOUT, AT_RSP_OK)) {
+          if(enableDebug) debugStream->println(F("SIM800L : readHTTP() - Invalid end of data while reading HTTP result from the module"));
+          return 705;
+        }
     }
 
     if(enableDebug) {
