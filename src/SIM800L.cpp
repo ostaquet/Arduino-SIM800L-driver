@@ -251,8 +251,7 @@ uint16_t SIM800L::readHTTP(uint16_t serverReadTimeoutMs) {
 
     if (dataSize==0){    
       if(enableDebug) {
-        debugStream->print(F("SIM800L : readHTTP() - No data to be read. "));
-        debugStream->println(recvBuffer);
+        debugStream->println(F("SIM800L : readHTTP() - No data to be read. "));
       }
     } else {
         // Ask for reading and detect the start of the reading...
