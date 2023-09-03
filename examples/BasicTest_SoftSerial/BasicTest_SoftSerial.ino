@@ -47,10 +47,10 @@ void setup() {
   delay(1000);
 
   // Initialize SIM800L driver with an internal buffer of 200 bytes and a reception buffer of 512 bytes, debug disabled
-  sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512);
+  sim800l = new SIM800L((Stream *)&serial, SIM800_RST_PIN, 200, 512);
 
   // Equivalent line with the debug enabled on the Serial
-  //sim800l = new SIM800L((Stream *)serial, SIM800_RST_PIN, 200, 512, (Stream *)&Serial);
+  //sim800l = new SIM800L((Stream *)&serial, SIM800_RST_PIN, 200, 512, (Stream *)&Serial);
 
   Serial.println("Start of test protocol");
 
@@ -63,12 +63,12 @@ void setup() {
   // Active echo mode (for some module, it is required)
   sim800l->enableEchoMode();
 
-  Serial.println("Module ready");
+  Serial.println(F("Module ready"));
 
   // Print version
-  Serial.print("Module ");
+  Serial.print(F("Module "));
   Serial.println(sim800l->getVersion());
-  Serial.print("Firmware ");
+  Serial.print(F("Firmware "));
   Serial.println(sim800l->getFirmware());
 
   // Print SIM card status
@@ -76,7 +76,7 @@ void setup() {
   Serial.println(sim800l->getSimStatus());
 
   // Print SIM card number
-  Serial.print("SIM card number ");
+  Serial.print(F("SIM card number "));
   Serial.println(sim800l->getSimCardNumber());
 
   // Wait for the GSM signal
@@ -103,9 +103,9 @@ void setup() {
   }
   Serial.println(F("Network registration OK"));
 
-  Serial.println("End of test protocol");
+  Serial.println(F("End of test protocol"));
 }
 
 void loop() {
-
+//Here you can add your codes :) !
 }
